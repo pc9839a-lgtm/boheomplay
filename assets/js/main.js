@@ -1,5 +1,8 @@
 (function () {
   const config = window.APP_CONFIG || {};
+  const CACHE_KEY = 'boheomplay_bootstrap_cache_v1';
+  const CACHE_META_KEY = 'boheomplay_bootstrap_cache_meta_v1';
+
   const state = {
     bootstrap: {
       settings: {}, products: [], reviews: [], targets: [], faqs: []
@@ -34,11 +37,104 @@
     bindStaticEvents();
     setTrackingFields();
 
-    const payload = config.useMockOnly
-      ? normalizeData(window.MOCK_BOOTSTRAP_DATA || {})
-      : await getBootstrapWithFallback();
-
+    const payload = await resolveBootstrapPayload();
     hydrate(payload);
+    exposeManualRefresh();
+  }
+
+  async function resolveBootstrapPayload() {
+    if (config.useMockOnly) {
+      return normalizeData(window.MOCK_BOOTSTRAP_DATA || {});
+    }
+
+    const forceRefresh = shouldForceRefreshFromUrl();
+    const cachedPayload = getCachedBootstrap();
+
+    if (cachedPayload && !forceRefresh) {
+      return cachedPayload;
+    }
+
+    try {
+      const remotePayload = await loadBootstrapFromApi();
+      const normalized = normalizeData(remotePayload);
+      saveCachedBootstrap(normalized);
+      clearRefreshParamsFromUrl();
+      return normalized;
+    } catch (error) {
+      if (cachedPayload) {
+        return cachedPayload;
+      }
+      return normalizeData(window.MOCK_BOOTSTRAP_DATA || {});
+    }
+  }
+
+  function exposeManualRefresh() {
+    window.BOHEOMPLAY_FORCE_REFRESH = async function () {
+      const fresh = await refreshBootstrapNow();
+      return fresh;
+    };
+  }
+
+  async function refreshBootstrapNow() {
+    if (config.useMockOnly) {
+      const mockPayload = normalizeData(window.MOCK_BOOTSTRAP_DATA || {});
+      hydrate(mockPayload);
+      return mockPayload;
+    }
+
+    const remotePayload = await loadBootstrapFromApi();
+    const normalized = normalizeData(remotePayload);
+    saveCachedBootstrap(normalized);
+    hydrate(normalized);
+    return normalized;
+  }
+
+  function shouldForceRefreshFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const candidates = [
+      params.get('refresh'),
+      params.get('sync'),
+      params.get('reload_data')
+    ].map(function (value) {
+      return String(value || '').trim().toLowerCase();
+    });
+
+    return candidates.some(function (value) {
+      return ['1', 'true', 'y', 'yes'].includes(value);
+    });
+  }
+
+  function clearRefreshParamsFromUrl() {
+    const url = new URL(window.location.href);
+    const before = url.search;
+    url.searchParams.delete('refresh');
+    url.searchParams.delete('sync');
+    url.searchParams.delete('reload_data');
+
+    if (before !== url.search) {
+      window.history.replaceState({}, '', url.toString());
+    }
+  }
+
+  function getCachedBootstrap() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      return normalizeData(JSON.parse(raw));
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function saveCachedBootstrap(payload) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+      localStorage.setItem(CACHE_META_KEY, JSON.stringify({
+        updated_at: new Date().toISOString()
+      }));
+    } catch (error) {
+      // localStorage 저장 실패 시 조용히 통과
+    }
   }
 
   function bindStaticEvents() {
@@ -175,19 +271,10 @@
     }
   }
 
-  async function getBootstrapWithFallback() {
-    try {
-      const apiPayload = await loadBootstrapFromApi();
-      return normalizeData(apiPayload);
-    } catch (error) {
-      return normalizeData(window.MOCK_BOOTSTRAP_DATA || {});
-    }
-  }
-
-  function loadBootstrapFromApi() {
+  async function loadBootstrapFromApi() {
     return new Promise(function (resolve, reject) {
       const callbackName = '__insuranceJsonpCallback_' + Date.now();
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams();
       params.set('action', 'bootstrap');
       params.set('callback', callbackName);
 
@@ -199,25 +286,25 @@
       window[callbackName] = function (payload) {
         if (finished) return;
         finished = true;
-        cleanup(true);
+        cleanup();
         resolve(payload && payload.data ? payload.data : payload);
       };
 
       script.onerror = function () {
         if (finished) return;
         finished = true;
-        cleanup(false);
+        cleanup();
         reject(new Error('bootstrap-load-failed'));
       };
 
       timeoutId = window.setTimeout(function () {
         if (finished) return;
         finished = true;
-        cleanup(false);
+        cleanup();
         reject(new Error('bootstrap-timeout'));
       }, 8000);
 
-      function cleanup(success) {
+      function cleanup() {
         if (timeoutId) {
           clearTimeout(timeoutId);
           timeoutId = null;
@@ -248,7 +335,7 @@
     const fb = window.MOCK_BOOTSTRAP_DATA || {};
     return {
       settings: safe.settings || fb.settings || {},
-      products: ensureArray(safe.products, fb.products),
+      products: ensureArray(safe.products || safe.insurance_products, fb.products),
       reviews: ensureArray(safe.reviews, fb.reviews),
       targets: ensureArray(safe.targets, fb.targets),
       faqs: ensureArray(safe.faqs, fb.faqs)
