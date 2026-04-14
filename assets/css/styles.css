@@ -1226,3 +1226,149 @@ button { cursor: pointer; }
     gap: 10px 14px;
   }
 }
+
+
+.privacy-view-btn {
+  border: 0;
+  background: none;
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.privacy-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: none;
+}
+
+.privacy-popup[aria-hidden='false'] {
+  display: block;
+}
+
+.privacy-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.56);
+  backdrop-filter: blur(5px);
+}
+
+.privacy-popup-panel {
+  position: relative;
+  z-index: 1;
+  width: min(640px, calc(100% - 24px));
+  margin: 7vh auto 0;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.24);
+  border: 1px solid var(--line);
+}
+
+.privacy-popup-content {
+  padding: 30px 28px 28px;
+}
+
+.privacy-popup-badge {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.privacy-popup-content h3 {
+  margin: 16px 0 0;
+  font-size: 28px;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+}
+
+.privacy-popup-list {
+  margin: 20px 0 0;
+  padding-left: 18px;
+  color: #334155;
+  line-height: 1.8;
+}
+
+.privacy-popup-list li + li {
+  margin-top: 10px;
+}
+
+.privacy-popup-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.privacy-popup-link {
+  color: var(--blue-deep);
+  font-weight: 800;
+}
+
+.privacy-popup-confirm {
+  min-width: 116px;
+  height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--blue), #2d7eff);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22);
+}
+
+.privacy-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  font-size: 26px;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .form-grid label.full.consent-check {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .privacy-popup-panel {
+    width: calc(100% - 16px);
+    margin-top: 3vh;
+    border-radius: 22px;
+  }
+
+  .privacy-popup-content {
+    padding: 24px 18px 22px;
+  }
+
+  .privacy-popup-content h3 {
+    font-size: 22px;
+  }
+
+  .privacy-popup-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .privacy-popup-link,
+  .privacy-popup-confirm {
+    width: 100%;
+    text-align: center;
+  }
+}

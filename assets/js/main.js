@@ -23,6 +23,8 @@
   const consultationTypeSelect = document.getElementById('consultationTypeSelect');
   const modal = document.getElementById('productModal');
   const modalBody = document.getElementById('productModalBody');
+  const privacyPopup = document.getElementById('privacyPopup');
+  const openPrivacyPopupButton = document.getElementById('openPrivacyPopup');
 
   let reviewAutoTimer = null;
 
@@ -42,6 +44,10 @@
   function bindStaticEvents() {
     if (mobileMenuToggle && mainNav) {
       mobileMenuToggle.addEventListener('click', () => mainNav.classList.toggle('is-open'));
+    }
+
+    if (openPrivacyPopupButton) {
+      openPrivacyPopupButton.addEventListener('click', openPrivacyPopup);
     }
 
     document.addEventListener('click', (event) => {
@@ -87,10 +93,21 @@
       if (target.closest('[data-close-modal]')) {
         closeModal();
       }
+
+      if (target.closest('[data-close-privacy]')) {
+        closePrivacyPopup();
+      }
     });
 
     window.addEventListener('resize', () => {
       setupReviewSlider((state.bootstrap.reviews || []).length);
+    });
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeModal();
+        closePrivacyPopup();
+      }
     });
 
     if (reviewViewport) {
@@ -244,14 +261,14 @@
 
   function renderSettings() {
     const settings = state.bootstrap.settings || {};
-    const siteName = settings.site_title || settings.site_name || '보험플레이';
-    const footerBrand = settings.footer_brand || 'WAYZI(보험플레이)';
-    const footerDescription = settings.footer_description || '대표 김도윤 · 사업자번호 538-42-01450';
+    const displayBrand = '보험플레이';
+    const footerBrand = 'WAYZI(보험플레이)';
+    const footerDescription = '대표 김도윤 · 사업자번호 538-42-01450';
     const heroImage = settings.hero_image || settings.hero_bg || '';
 
-    setText('siteName', siteName);
+    setText('siteName', displayBrand);
     setText('footerSiteName', footerBrand);
-    setText('siteNameInput', siteName, 'value');
+    setText('siteNameInput', displayBrand, 'value');
     setText('footerDescription', footerDescription);
     setText('heroTag1', settings.hero_tag_1 || '무료 보장분석');
     setText('heroTag2', settings.hero_tag_2 || '맞춤 설계');
@@ -417,6 +434,7 @@
 
   function closeModal() {
     modal?.setAttribute('aria-hidden', 'true');
+    if (privacyPopup?.getAttribute('aria-hidden') === 'false') return;
     document.body.style.overflow = '';
   }
 
@@ -482,6 +500,19 @@
       window.clearInterval(reviewAutoTimer);
       reviewAutoTimer = null;
     }
+  }
+
+  function openPrivacyPopup() {
+    if (!privacyPopup) return;
+    privacyPopup.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePrivacyPopup() {
+    if (!privacyPopup) return;
+    privacyPopup.setAttribute('aria-hidden', 'true');
+    if (modal?.getAttribute('aria-hidden') === 'false') return;
+    document.body.style.overflow = '';
   }
 
   function setTrackingFields() {
