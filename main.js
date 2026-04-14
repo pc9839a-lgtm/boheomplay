@@ -1,7 +1,7 @@
 (function () {
   const config = window.APP_CONFIG || {};
-  const CACHE_KEY = 'boheomplay_bootstrap_cache_v1';
-  const CACHE_META_KEY = 'boheomplay_bootstrap_cache_meta_v1';
+  const CACHE_KEY = 'boheomplay_bootstrap_cache_v20260414_05';
+  const CACHE_META_KEY = 'boheomplay_bootstrap_cache_meta_v20260414_05';
 
   const state = {
     bootstrap: {
@@ -72,6 +72,14 @@
     window.BOHEOMPLAY_FORCE_REFRESH = async function () {
       const fresh = await refreshBootstrapNow();
       return fresh;
+    };
+    window.BOHEOMPLAY_CLEAR_CACHE = function () {
+      try {
+        localStorage.removeItem('boheomplay_bootstrap_cache_v1');
+        localStorage.removeItem('boheomplay_bootstrap_cache_meta_v1');
+        localStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(CACHE_META_KEY);
+      } catch (error) {}
     };
   }
 
