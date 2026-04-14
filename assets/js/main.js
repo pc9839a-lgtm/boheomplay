@@ -237,7 +237,7 @@
         if (phoneInput) phoneInput.value = phone;
 
         const extraLines = [];
-        [['gender', '성별'], ['region_detail', '거주지역'], ['consultation_goal', '상담목적'], ['existing_insurance', '현재 보험 가입 상태'], ['contact_time', '상담 가능 시간대']]
+        [['gender', '성별'], ['consultation_goal', '상담목적'], ['contact_time', '상담 가능 시간대']]
           .forEach(([key, label]) => {
             const value = String(formData.get(key) || '').trim();
             if (value) extraLines.push(`${label}: ${value}`);
@@ -357,17 +357,17 @@
     setText('footerSiteName', footerBrand);
     setText('siteNameInput', displayBrand, 'value');
     setText('footerDescription', footerDescription);
-    setText('heroTag1', settings.hero_tag_1 || '무료 보장분석');
-    setText('heroTag2', settings.hero_tag_2 || '맞춤 설계');
-    setText('heroTag3', settings.hero_tag_3 || '1:1 상담');
-    setHtml('heroTitle', convertLineBreaks(escapeHtml(settings.hero_title || '보험 비교 상담,\n복잡하게 비교하지 마세요.')));
-    setHtml('heroSubtitle', convertLineBreaks(escapeHtml(settings.hero_subtitle || '지금 필요한 보장부터 기존 보험 점검까지\n한 번에 정리해드리는 상담 페이지입니다.')));
+    setText('heroTag1', settings.hero_tag_1 || '기존 보험 점검');
+    setText('heroTag2', settings.hero_tag_2 || '무료 보장분석');
+    setText('heroTag3', settings.hero_tag_3 || '1:1 맞춤 상담');
+    setHtml('heroTitle', convertLineBreaks(escapeHtml(settings.hero_title || '보험료는 계속 나가는데,\n뭐가 잘 들어가 있는지 헷갈리시나요?')));
+    setHtml('heroSubtitle', convertLineBreaks(escapeHtml(settings.hero_subtitle || '기존 보험이 잘 들어가 있는지 먼저 점검하고,\n부족한 보장만 내 상황에 맞게 정리해드립니다.')));
     setHtml('identityTitle', (() => {
-      const text = settings.identity_title || '특정 상품만 권하는 곳이 아니라\n상황에 맞게 정리하는 상담입니다.';
+      const text = settings.identity_title || '보험플레이는\n상품을 밀어넣기보다 먼저 정리하는 상담을 합니다.';
       const parts = text.split('\n');
       return parts.length > 1 ? `${escapeHtml(parts[0])}<br><span>${escapeHtml(parts.slice(1).join(' '))}</span>` : `<span>${escapeHtml(text)}</span>`;
     })());
-    setHtml('identityDesc', convertLineBreaks(escapeHtml(settings.identity_desc || '신규 가입만 보는 상담이 아닙니다.\n기존 보험 리모델링, 가족 보장 점검, 실손·암·운전자·종신 등\n현재 상황에 맞춰 우선순위를 정리하는 상담 페이지입니다.')));
+    setHtml('identityDesc', convertLineBreaks(escapeHtml(settings.identity_desc || '보험 상담이 어려운 이유는 상품이 많아서가 아니라,\n내 보험이 지금 어떤 상태인지 알기 어렵기 때문입니다.\n\n보험플레이는 기존 보험이 있다면 중복과 부족을 먼저 보고,\n새로 준비해야 한다면 꼭 필요한 보장부터 우선순위를 정리해드립니다.')));
 
     const heroBg = document.getElementById('heroBg');
     if (heroBg && heroImage) {
