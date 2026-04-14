@@ -738,3 +738,344 @@ img {
     width: 100%;
   }
 }
+
+/* =========================================================
+   보험플레이 CSS 패치
+   목적:
+   1) WHAT YOU GET / PROCESS 카드 단조로움 개선
+   2) HOW WE CHECK 섹션 과한 대비와 무게감 완화
+   3) 전체 밸런스 조금 더 정돈
+   붙여넣기:
+   styles.css 맨 아래에 그대로 추가
+   ========================================================= */
+
+
+/* =========================
+   공통 섹션 여백/타이틀 보정
+   ========================= */
+#outcomes,
+#process,
+#brand-message {
+  padding-top: 88px;
+  padding-bottom: 88px;
+}
+
+#outcomes .section-title,
+#process .section-title {
+  letter-spacing: -0.04em;
+}
+
+#outcomes .section-description,
+#process .section-description {
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #5f6b84;
+  line-height: 1.8;
+}
+
+
+/* =========================
+   WHAT YOU GET 카드
+   기존: 너무 단조로움
+   방향: 가볍지만 정보형 느낌 강화
+   ========================= */
+#outcomes .extra-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 34px;
+}
+
+#outcomes .extra-card {
+  position: relative;
+  padding: 34px 30px 30px;
+  border-radius: 28px;
+  border: 1px solid #dbe3f2;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,255,0.96));
+  box-shadow: 0 18px 40px rgba(16, 38, 84, 0.06);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+  overflow: hidden;
+  min-height: 210px;
+}
+
+#outcomes .extra-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 28px;
+  width: 72px;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #8fb5ff);
+}
+
+#outcomes .extra-card::after {
+  content: "";
+  position: absolute;
+  right: -38px;
+  top: -38px;
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(37,99,235,0.10), rgba(37,99,235,0));
+  pointer-events: none;
+}
+
+#outcomes .extra-card:hover {
+  transform: translateY(-4px);
+  border-color: #bfd0f6;
+  box-shadow: 0 22px 48px rgba(16, 38, 84, 0.10);
+}
+
+#outcomes .extra-card h3 {
+  margin: 6px 0 14px;
+  font-size: 1.95rem;
+  line-height: 1.32;
+  letter-spacing: -0.04em;
+  color: #081a3c;
+}
+
+#outcomes .extra-card p {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.9;
+  color: #5f6b84;
+}
+
+
+/* =========================
+   HOW WE CHECK 섹션
+   기존: 너무 과함
+   방향: 무게 줄이고 고급스럽게 정리
+   ========================= */
+.trust-section {
+  padding-top: 34px;
+  padding-bottom: 48px;
+}
+
+.trust-section .trust-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+  align-items: center;
+  gap: 34px;
+  padding: 54px 56px;
+  border-radius: 34px;
+  border: 1px solid rgba(77, 111, 180, 0.22);
+  background:
+    linear-gradient(135deg, #071a43 0%, #102b67 52%, #163976 100%);
+  box-shadow: 0 24px 60px rgba(5, 20, 51, 0.16);
+}
+
+.trust-section .price-guarantee-label {
+  display: inline-block;
+  margin-bottom: 18px;
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #68a0ff;
+}
+
+.trust-section .price-guarantee-copy h2 {
+  margin: 0 0 22px;
+  max-width: 780px;
+  font-size: clamp(2.35rem, 4vw, 4.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.055em;
+  color: #ffffff;
+}
+
+.trust-section .price-guarantee-copy p {
+  margin: 0;
+  max-width: 760px;
+  font-size: 1.08rem;
+  line-height: 1.95;
+  color: rgba(233, 240, 255, 0.90);
+}
+
+.trust-section .price-guarantee-copy strong {
+  color: #ffffff;
+}
+
+.trust-section .price-guarantee-side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.trust-section .price-guarantee-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin-bottom: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.07);
+  color: #68a0ff;
+  font-size: 2.4rem;
+  font-weight: 900;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.trust-section .price-guarantee-side strong {
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.trust-section .price-guarantee-side span {
+  margin-top: 8px;
+  font-size: 1.08rem;
+  color: rgba(231, 239, 255, 0.82);
+}
+
+
+/* =========================
+   PROCESS 카드
+   기존: 너무 단조로움
+   방향: 단계감 + 리듬감 추가
+   ========================= */
+#process .extra-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 34px;
+}
+
+#process .extra-card {
+  position: relative;
+  padding: 32px 30px 28px;
+  min-height: 188px;
+  border-radius: 28px;
+  border: 1px solid #dbe3f2;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  box-shadow: 0 16px 38px rgba(16, 38, 84, 0.05);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+#process .extra-card::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.10);
+}
+
+#process .extra-card:hover {
+  transform: translateY(-4px);
+  border-color: #bfd0f6;
+  box-shadow: 0 20px 44px rgba(16, 38, 84, 0.08);
+}
+
+#process .extra-card h3 {
+  margin: 0 0 14px;
+  padding-right: 56px;
+  font-size: 1.95rem;
+  line-height: 1.32;
+  letter-spacing: -0.04em;
+  color: #081a3c;
+}
+
+#process .extra-card p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.85;
+  color: #5f6b84;
+}
+
+
+/* =========================
+   마지막 브랜드 메시지 영역도 조금 정리
+   ========================= */
+#brand-message {
+  padding-top: 56px;
+  padding-bottom: 44px;
+}
+
+#brand-message .section-title {
+  line-height: 1.28;
+  letter-spacing: -0.05em;
+}
+
+
+/* =========================
+   반응형
+   ========================= */
+@media (max-width: 1100px) {
+  .trust-section .trust-card {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 44px 34px;
+  }
+
+  .trust-section .price-guarantee-copy h2 {
+    max-width: none;
+  }
+}
+
+@media (max-width: 900px) {
+  #outcomes .extra-grid,
+  #process .extra-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #outcomes .extra-card,
+  #process .extra-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  #outcomes,
+  #process,
+  #brand-message {
+    padding-top: 70px;
+    padding-bottom: 70px;
+  }
+
+  #outcomes .extra-card,
+  #process .extra-card {
+    padding: 26px 22px 24px;
+    border-radius: 22px;
+  }
+
+  #outcomes .extra-card h3,
+  #process .extra-card h3 {
+    font-size: 1.55rem;
+  }
+
+  .trust-section .trust-card {
+    padding: 34px 22px;
+    border-radius: 24px;
+  }
+
+  .trust-section .price-guarantee-copy h2 {
+    font-size: 2.35rem;
+    line-height: 1.18;
+  }
+
+  .trust-section .price-guarantee-copy p {
+    font-size: 0.98rem;
+    line-height: 1.82;
+  }
+
+  .trust-section .price-guarantee-side strong {
+    font-size: 1.45rem;
+  }
+
+  .trust-section .price-guarantee-side span {
+    font-size: 0.96rem;
+  }
+}
