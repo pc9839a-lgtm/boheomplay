@@ -1053,3 +1053,176 @@ button { cursor: pointer; }
   .sib-title { font-size: 15px; }
   .sib-sub { display: none; }
 }
+
+
+/* =========================================================
+   footer legal links / company meta
+   ========================================================= */
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.footer-company-meta {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+}
+
+.footer-copy {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+}
+
+/* =========================================================
+   content / policy pages
+   ========================================================= */
+.subpage-shell {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.subpage-main {
+  flex: 1;
+  padding: 88px 0 110px;
+  background: linear-gradient(180deg, #f5f7fb 0%, #ffffff 100%);
+}
+
+.page-hero {
+  padding: 24px 0 28px;
+}
+
+.breadcrumbs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.breadcrumbs a { color: #143878; }
+
+.page-title {
+  margin: 0;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.page-subtitle {
+  margin: 14px 0 0;
+  color: #667085;
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.doc-card {
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 28px;
+  padding: 34px;
+  box-shadow: 0 14px 42px rgba(15, 23, 42, 0.06);
+}
+
+.doc-card + .doc-card { margin-top: 18px; }
+
+.doc-card h2 {
+  margin: 0 0 16px;
+  font-size: 26px;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+}
+
+.doc-card h3 {
+  margin: 28px 0 10px;
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.doc-card p,
+.doc-card li,
+.doc-card dd {
+  color: #344054;
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.doc-card ul,
+.doc-card ol {
+  margin: 10px 0 0;
+  padding-left: 22px;
+}
+
+.doc-card dl {
+  margin: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.doc-card dt {
+  font-size: 14px;
+  font-weight: 800;
+  color: #143878;
+  margin-bottom: 4px;
+}
+
+.inline-cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.inline-cta-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 14px;
+  background: #091a3b;
+  color: #fff;
+  font-weight: 800;
+}
+
+.inline-cta-link.secondary {
+  background: #eef4ff;
+  color: #143878;
+}
+
+@media (max-width: 768px) {
+  .subpage-main {
+    padding: 72px 0 96px;
+  }
+
+  .doc-card {
+    padding: 24px 20px;
+    border-radius: 22px;
+  }
+
+  .footer-links {
+    gap: 10px 14px;
+  }
+}

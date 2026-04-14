@@ -244,16 +244,19 @@
 
   function renderSettings() {
     const settings = state.bootstrap.settings || {};
-    const siteName = settings.site_title || settings.site_name || '보험 상담센터';
+    const siteName = settings.site_title || settings.site_name || '보험플레이';
+    const footerBrand = settings.footer_brand || 'WAYZI(보험플레이)';
+    const footerDescription = settings.footer_description || '대표 김도윤 · 사업자번호 538-42-01450';
     const heroImage = settings.hero_image || settings.hero_bg || '';
 
     setText('siteName', siteName);
-    setText('footerSiteName', siteName);
+    setText('footerSiteName', footerBrand);
     setText('siteNameInput', siteName, 'value');
+    setText('footerDescription', footerDescription);
     setText('heroTag1', settings.hero_tag_1 || '무료 보장분석');
     setText('heroTag2', settings.hero_tag_2 || '맞춤 설계');
     setText('heroTag3', settings.hero_tag_3 || '1:1 상담');
-    setHtml('heroTitle', convertLineBreaks(escapeHtml(settings.hero_title || '보험 상담,\n복잡하게 비교하지 마세요.')));
+    setHtml('heroTitle', convertLineBreaks(escapeHtml(settings.hero_title || '보험 비교 상담,\n복잡하게 비교하지 마세요.')));
     setHtml('heroSubtitle', convertLineBreaks(escapeHtml(settings.hero_subtitle || '지금 필요한 보장부터 기존 보험 점검까지\n한 번에 정리해드리는 상담 페이지입니다.')));
     setHtml('identityTitle', (() => {
       const text = settings.identity_title || '특정 상품만 권하는 곳이 아니라\n상황에 맞게 정리하는 상담입니다.';
