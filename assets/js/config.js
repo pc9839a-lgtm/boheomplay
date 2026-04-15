@@ -1,5 +1,5 @@
 window.APP_CONFIG = {
-  apiUrl: 'https://script.google.com/macros/s/AKfycbw1BABVdEXcw5km-6ZZo3OiFTjNkC4R5A1-KcQNpmZtGuTlr6BjT0uQqBTSybHlfqnXvQ/exec',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxCtjwoWhUyi1HxD93HfS_09umPz_kNDj0fp-necgFH37LU5JbkMnS3IZFxSDAZbeVWzw/exec',
   useMockOnly: false,
   submitTimeout: 30000
 };
