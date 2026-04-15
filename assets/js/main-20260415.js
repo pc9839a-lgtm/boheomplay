@@ -497,8 +497,24 @@
   }
 
   function openProduct(productId) {
-    const product = (state.bootstrap.products || []).find(item => String(item.product_id).trim() === String(productId).trim());
+    const product = (state.bootstrap.products || []).find(
+      item => String(item.product_id).trim() === String(productId).trim()
+    );
     if (!product || !modalBody || !modal) return;
+
+    const fitCases = [product.fit_case_1, product.fit_case_2, product.fit_case_3].filter(Boolean);
+    const checkItems = [
+      product.point_1,
+      product.point_2,
+      product.point_3,
+      product.check_item_4,
+      product.check_item_5,
+      product.check_item_6
+    ].filter(Boolean);
+    const results = [product.result_1, product.result_2, product.result_3].filter(Boolean);
+
+    const leadText = product.summary_medium || product.description || product.summary || '';
+    const ctaText = product.cta_text || '이 분야로 상담 신청';
 
     modalBody.innerHTML = `
       <section class="modal-card">
@@ -506,19 +522,69 @@
           ${product.category ? `<span class="modal-badge">${escapeHtml(product.category)}</span>` : ''}
           ${product.subtitle ? `<span class="modal-badge">${escapeHtml(product.subtitle)}</span>` : ''}
         </div>
+
         <h3>${escapeHtml(product.title || '')}</h3>
-        <p>${escapeHtml(product.description || product.summary || '')}</p>
+
+        ${leadText ? `
+          <p style="margin:12px 0 0; font-size:17px; line-height:1.8; color:#475467; word-break:keep-all;">
+            ${escapeHtml(leadText)}
+          </p>
+        ` : ''}
+
         <div class="modal-meta-grid">
           ${metaBox('추천대상', product.target || '-')}
           ${metaBox('상담포인트', product.point || '-')}
           ${metaBox('상담방향', product.subtitle || '-')}
         </div>
-        ${(product.point_1 || product.point_2 || product.point_3) ? `
-          <ul class="modal-points">
-            ${[product.point_1, product.point_2, product.point_3].filter(Boolean).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
-          </ul>` : ''}
+
+        ${product.why_now_title || product.why_now_desc ? `
+          <div style="margin-top:24px;">
+            <h4 style="margin:0 0 10px; font-size:20px; line-height:1.4; color:#111827;">
+              ${escapeHtml(product.why_now_title || '왜 이 상담이 필요할까요?')}
+            </h4>
+            <p style="margin:0; font-size:16px; line-height:1.85; color:#4b5563; word-break:keep-all;">
+              ${escapeHtml(product.why_now_desc || '')}
+            </p>
+          </div>
+        ` : ''}
+
+        ${fitCases.length ? `
+          <div style="margin-top:24px;">
+            <h4 style="margin:0 0 12px; font-size:20px; line-height:1.4; color:#111827;">
+              이런 분께 잘 맞습니다
+            </h4>
+            <ul class="modal-points">
+              ${fitCases.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        ${checkItems.length ? `
+          <div style="margin-top:24px;">
+            <h4 style="margin:0 0 12px; font-size:20px; line-height:1.4; color:#111827;">
+              상담에서 확인하는 핵심 항목
+            </h4>
+            <ul class="modal-points">
+              ${checkItems.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        ${results.length ? `
+          <div style="margin-top:24px;">
+            <h4 style="margin:0 0 12px; font-size:20px; line-height:1.4; color:#111827;">
+              상담 후 이렇게 정리됩니다
+            </h4>
+            <ul class="modal-points">
+              ${results.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
         <div class="modal-action">
-          <a href="#contact" class="btn" data-select-product="${escapeAttribute(product.product_id)}">이 분야로 상담 신청</a>
+          <a href="#contact" class="btn" data-select-product="${escapeAttribute(product.product_id)}">
+            ${escapeHtml(ctaText)}
+          </a>
         </div>
       </section>
     `;
