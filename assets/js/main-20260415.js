@@ -1,3 +1,4 @@
+
 (function () {
   const config = window.APP_CONFIG || {};
   const CACHE_KEY = 'boheomplay_bootstrap_cache_v20260414_05';
@@ -33,10 +34,11 @@
 
   let reviewAutoTimer = null;
   let productAutoTimer = null;
-  let productTouchStartX = 0;
-  let productTouchCurrentX = 0;
   let reviewTouchStartX = 0;
-  let reviewTouchCurrentX = 0;
+  let reviewTouchDeltaX = 0;
+  let productTouchStartX = 0;
+  let productTouchDeltaX = 0;
+  let contactObserver = null;
 
   init();
 
@@ -47,7 +49,7 @@
     const payload = await resolveBootstrapPayload();
     hydrate(payload);
     exposeManualRefresh();
-    syncStickyInquiryBar();
+    setupContactStickyObserver();
   }
 
   async function resolveBootstrapPayload() {
@@ -213,11 +215,8 @@
 
     window.addEventListener('resize', () => {
       setupReviewSlider((state.bootstrap.reviews || []).length);
-      setupProductSlider((state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory).length);
-      syncStickyInquiryBar();
+      setupProductSlider();
     });
-
-    window.addEventListener('scroll', syncStickyInquiryBar, { passive: true });
 
     window.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
@@ -229,18 +228,18 @@
     if (reviewViewport) {
       reviewViewport.addEventListener('mouseenter', stopReviewAuto);
       reviewViewport.addEventListener('mouseleave', () => setupReviewSlider((state.bootstrap.reviews || []).length));
-      reviewViewport.addEventListener('touchstart', handleReviewTouchStart, { passive: true });
-      reviewViewport.addEventListener('touchmove', handleReviewTouchMove, { passive: true });
-      reviewViewport.addEventListener('touchend', handleReviewTouchEnd, { passive: true });
+      reviewViewport.addEventListener('touchstart', onReviewTouchStart, { passive: true });
+      reviewViewport.addEventListener('touchmove', onReviewTouchMove, { passive: true });
+      reviewViewport.addEventListener('touchend', onReviewTouchEnd, { passive: true });
     }
 
     if (productGrid) {
       productGrid.addEventListener('mouseenter', stopProductAuto);
-      productGrid.addEventListener('mouseleave', () => setupProductSlider((state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory).length));
-      productGrid.addEventListener('touchstart', handleProductTouchStart, { passive: true });
-      productGrid.addEventListener('touchmove', handleProductTouchMove, { passive: true });
-      productGrid.addEventListener('touchend', handleProductTouchEnd, { passive: true });
-      productGrid.addEventListener('scroll', debounceProductAutoRestart, { passive: true });
+      productGrid.addEventListener('mouseleave', startProductAuto);
+      productGrid.addEventListener('touchstart', onProductTouchStart, { passive: true });
+      productGrid.addEventListener('touchmove', onProductTouchMove, { passive: true });
+      productGrid.addEventListener('touchend', onProductTouchEnd, { passive: true });
+      productGrid.addEventListener('scroll', onProductScroll, { passive: true });
     }
 
     if (phoneInput) {
@@ -358,7 +357,8 @@
     renderTargets();
     renderFaqs();
     populateConsultationTypes();
-    syncStickyInquiryBar();
+    setupProductSlider();
+    setupContactStickyObserver();
   }
 
   function normalizeData(data) {
@@ -420,9 +420,10 @@
     if (!productGrid) return;
     const products = (state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory);
 
+    stopProductAuto();
+
     if (!products.length) {
       productGrid.innerHTML = `<div class="section-empty">현재 준비된 상담 분야가 없습니다. 바로 상담 신청을 남겨주시면 순차적으로 안내드립니다.</div>`;
-      stopProductAuto();
       return;
     }
 
@@ -454,7 +455,7 @@
       `;
     }).join('');
 
-    setupProductSlider(products.length);
+    setupProductSlider();
   }
 
   function renderReviews() {
@@ -552,14 +553,12 @@
 
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    syncStickyInquiryBar();
   }
 
   function closeModal() {
     modal?.setAttribute('aria-hidden', 'true');
     if (privacyPopup?.getAttribute('aria-hidden') === 'false') return;
     document.body.style.overflow = '';
-    syncStickyInquiryBar();
   }
 
   function getReviewPerView() {
@@ -569,6 +568,7 @@
   function setupReviewSlider(total) {
     if (!reviewGrid) return;
     const perView = getReviewPerView();
+    const isMobile = perView === 1;
     const maxPage = Math.max(0, total - perView);
     state.reviewPage = Math.min(state.reviewPage, maxPage);
 
@@ -591,9 +591,9 @@
     next?.classList.remove('is-hidden');
     if (reviewDots) reviewDots.className = 'review-dots';
 
-    const gap = window.innerWidth <= 720 ? 0 : 22;
+    const gap = isMobile ? 0 : 22;
     const viewportWidth = reviewViewport ? reviewViewport.clientWidth : 0;
-    const cardWidth = perView === 1 ? viewportWidth : (viewportWidth - gap) / perView;
+    const cardWidth = isMobile ? viewportWidth : (viewportWidth - gap) / perView;
     reviewGrid.style.transform = `translateX(-${state.reviewPage * (cardWidth + gap)}px)`;
 
     if (reviewDots) {
@@ -628,35 +628,83 @@
     }
   }
 
-  function setupProductSlider(total) {
-    if (!productGrid) return;
+  function onReviewTouchStart(event) {
+    stopReviewAuto();
+    reviewTouchStartX = event.changedTouches[0].clientX;
+    reviewTouchDeltaX = 0;
+  }
 
-    const isMobile = window.innerWidth <= 720;
-    if (!isMobile || total <= 1) {
-      stopProductAuto();
+  function onReviewTouchMove(event) {
+    reviewTouchDeltaX = event.changedTouches[0].clientX - reviewTouchStartX;
+  }
+
+  function onReviewTouchEnd() {
+    if (Math.abs(reviewTouchDeltaX) > 40) {
+      moveReviews(reviewTouchDeltaX > 0 ? 'prev' : 'next');
+    } else {
+      setupReviewSlider((state.bootstrap.reviews || []).length);
+    }
+  }
+
+  function setupProductSlider() {
+    stopProductAuto();
+    if (!productGrid) return;
+    if (window.innerWidth > 768) {
+      productGrid.scrollLeft = 0;
       return;
     }
-
     startProductAuto();
+  }
+
+  function getProductCards() {
+    if (!productGrid) return [];
+    return Array.from(productGrid.querySelectorAll('.product-card'));
+  }
+
+  function getProductStep() {
+    const cards = getProductCards();
+    if (!cards.length) return 0;
+    const firstCard = cards[0];
+    const style = window.getComputedStyle(productGrid);
+    const gap = parseFloat(style.columnGap || style.gap || '0') || 0;
+    return firstCard.getBoundingClientRect().width + gap;
+  }
+
+  function getActiveProductIndex() {
+    const step = getProductStep();
+    if (!step || !productGrid) return 0;
+    return Math.round(productGrid.scrollLeft / step);
+  }
+
+  function scrollToProductIndex(index, smooth) {
+    const cards = getProductCards();
+    const step = getProductStep();
+    if (!cards.length || !step || !productGrid) return;
+    const maxIndex = Math.max(0, cards.length - 1);
+    const targetIndex = Math.max(0, Math.min(index, maxIndex));
+    productGrid.scrollTo({
+      left: targetIndex * step,
+      behavior: smooth ? 'smooth' : 'auto'
+    });
+  }
+
+  function moveProducts(direction) {
+    const cards = getProductCards();
+    if (!cards.length) return;
+    const maxIndex = Math.max(0, cards.length - 1);
+    const currentIndex = getActiveProductIndex();
+    const nextIndex = direction === 'prev'
+      ? (currentIndex <= 0 ? maxIndex : currentIndex - 1)
+      : (currentIndex >= maxIndex ? 0 : currentIndex + 1);
+    scrollToProductIndex(nextIndex, true);
   }
 
   function startProductAuto() {
     stopProductAuto();
-    if (!productGrid || window.innerWidth > 720) return;
-
-    productAutoTimer = window.setInterval(function () {
-      const card = productGrid.querySelector('.product-card');
-      if (!card) return;
-      const step = card.getBoundingClientRect().width + 14;
-      const maxScroll = productGrid.scrollWidth - productGrid.clientWidth;
-      const nextLeft = productGrid.scrollLeft + step;
-
-      if (nextLeft >= maxScroll - 8) {
-        productGrid.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        productGrid.scrollTo({ left: nextLeft, behavior: 'smooth' });
-      }
-    }, 3200);
+    if (!productGrid || window.innerWidth > 768) return;
+    const cards = getProductCards();
+    if (cards.length <= 1) return;
+    productAutoTimer = window.setInterval(() => moveProducts('next'), 4200);
   }
 
   function stopProductAuto() {
@@ -666,62 +714,59 @@
     }
   }
 
-  let productAutoRestartTimer = null;
-  function debounceProductAutoRestart() {
-    if (window.innerWidth > 720) return;
+  function onProductTouchStart(event) {
     stopProductAuto();
-    if (productAutoRestartTimer) window.clearTimeout(productAutoRestartTimer);
-    productAutoRestartTimer = window.setTimeout(() => startProductAuto(), 1800);
+    productTouchStartX = event.changedTouches[0].clientX;
+    productTouchDeltaX = 0;
   }
 
-  function handleProductTouchStart(event) {
-    if (window.innerWidth > 720) return;
+  function onProductTouchMove(event) {
+    productTouchDeltaX = event.changedTouches[0].clientX - productTouchStartX;
+  }
+
+  function onProductTouchEnd() {
+    if (window.innerWidth > 768) return;
+    if (Math.abs(productTouchDeltaX) > 40) {
+      moveProducts(productTouchDeltaX > 0 ? 'prev' : 'next');
+    }
+    window.setTimeout(startProductAuto, 1200);
+  }
+
+  function onProductScroll() {
+    if (window.innerWidth > 768) return;
     stopProductAuto();
-    productTouchStartX = event.touches[0].clientX;
-    productTouchCurrentX = productTouchStartX;
+    window.clearTimeout(onProductScroll._timer);
+    onProductScroll._timer = window.setTimeout(startProductAuto, 1400);
   }
 
-  function handleProductTouchMove(event) {
-    if (window.innerWidth > 720) return;
-    productTouchCurrentX = event.touches[0].clientX;
-  }
+  function setupContactStickyObserver() {
+    if (!stickyInquiryBar || !contactSection) return;
 
-  function handleProductTouchEnd() {
-    if (window.innerWidth > 720) return;
-    const deltaX = productTouchStartX - productTouchCurrentX;
-    const card = productGrid?.querySelector('.product-card');
-    if (card && Math.abs(deltaX) > 40) {
-      const step = card.getBoundingClientRect().width + 14;
-      const nextLeft = deltaX > 0 ? productGrid.scrollLeft + step : productGrid.scrollLeft - step;
-      productGrid.scrollTo({ left: Math.max(0, nextLeft), behavior: 'smooth' });
+    if (contactObserver) {
+      contactObserver.disconnect();
+      contactObserver = null;
     }
-    debounceProductAutoRestart();
-  }
 
-  function handleReviewTouchStart(event) {
-    stopReviewAuto();
-    reviewTouchStartX = event.touches[0].clientX;
-    reviewTouchCurrentX = reviewTouchStartX;
-  }
+    contactObserver = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      if (entry.isIntersecting) {
+        stickyInquiryBar.classList.add('is-hidden-by-contact');
+      } else {
+        stickyInquiryBar.classList.remove('is-hidden-by-contact');
+      }
+    }, {
+      root: null,
+      threshold: 0.15
+    });
 
-  function handleReviewTouchMove(event) {
-    reviewTouchCurrentX = event.touches[0].clientX;
-  }
-
-  function handleReviewTouchEnd() {
-    const deltaX = reviewTouchStartX - reviewTouchCurrentX;
-    if (Math.abs(deltaX) > 40) {
-      moveReviews(deltaX > 0 ? 'next' : 'prev');
-    } else {
-      setupReviewSlider((state.bootstrap.reviews || []).length);
-    }
+    contactObserver.observe(contactSection);
   }
 
   function openPrivacyPopup() {
     if (!privacyPopup) return;
     privacyPopup.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    syncStickyInquiryBar();
   }
 
   function closePrivacyPopup() {
@@ -729,7 +774,6 @@
     privacyPopup.setAttribute('aria-hidden', 'true');
     if (modal?.getAttribute('aria-hidden') === 'false') return;
     document.body.style.overflow = '';
-    syncStickyInquiryBar();
   }
 
   function setTrackingFields() {
@@ -757,23 +801,6 @@
 
   function scrollToSection(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function syncStickyInquiryBar() {
-    if (!stickyInquiryBar) return;
-
-    const shouldHideForContact = contactSection && isElementInViewport(contactSection, 120);
-    const modalOpen = modal && modal.getAttribute('aria-hidden') === 'false';
-    const privacyOpen = privacyPopup && privacyPopup.getAttribute('aria-hidden') === 'false';
-
-    stickyInquiryBar.classList.toggle('is-hidden-by-contact', !!(shouldHideForContact || modalOpen || privacyOpen));
-  }
-
-  function isElementInViewport(element, offset) {
-    if (!element) return false;
-    const rect = element.getBoundingClientRect();
-    const topOffset = Number(offset || 0);
-    return rect.top <= window.innerHeight - topOffset && rect.bottom >= topOffset;
   }
 
   function setText(id, value, mode) {
