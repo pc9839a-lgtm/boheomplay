@@ -30,6 +30,8 @@
   const openPrivacyPopupButton = document.getElementById('openPrivacyPopup');
 
   let reviewAutoTimer = null;
+  let productAutoTimer = null;
+  let reviewTouchStartX = 0;
 
   init();
 
@@ -141,7 +143,7 @@
         updated_at: new Date().toISOString()
       }));
     } catch (error) {
-      // localStorage 저장 실패 시 조용히 통과
+      // localStorage       ㅽ뙣    議곗슜    듦낵
     }
   }
 
@@ -205,6 +207,7 @@
 
     window.addEventListener('resize', () => {
       setupReviewSlider((state.bootstrap.reviews || []).length);
+      setupMobileProductSlider();
     });
 
     window.addEventListener('keydown', (event) => {
@@ -217,8 +220,26 @@
     if (reviewViewport) {
       reviewViewport.addEventListener('mouseenter', stopReviewAuto);
       reviewViewport.addEventListener('mouseleave', () => setupReviewSlider((state.bootstrap.reviews || []).length));
-      reviewViewport.addEventListener('touchstart', stopReviewAuto, { passive: true });
-      reviewViewport.addEventListener('touchend', () => setupReviewSlider((state.bootstrap.reviews || []).length), { passive: true });
+
+      reviewViewport.addEventListener('touchstart', (event) => {
+        stopReviewAuto();
+        reviewTouchStartX = event.changedTouches && event.changedTouches[0]
+          ? event.changedTouches[0].clientX
+          : 0;
+      }, { passive: true });
+
+      reviewViewport.addEventListener('touchend', (event) => {
+        const endX = event.changedTouches && event.changedTouches[0]
+          ? event.changedTouches[0].clientX
+          : 0;
+        const deltaX = endX - reviewTouchStartX;
+
+        if (Math.abs(deltaX) > 40) {
+          moveReviews(deltaX > 0 ? 'prev' : 'next');
+        } else {
+          setupReviewSlider((state.bootstrap.reviews || []).length);
+        }
+      }, { passive: true });
     }
 
     if (phoneInput) {
@@ -233,45 +254,45 @@
 
         const formData = new FormData(form);
 
-        if (!formData.get('name')?.trim()) return updateFormResult('성함을 입력해주세요.', 'error');
+        if (!formData.get('name')?.trim()) return updateFormResult(' 깊븿    낅젰 댁＜ 몄슂.', 'error');
         const phone = formData.get('phone')?.replace(/\D+/g, '').trim();
-        if (!phone) return updateFormResult('연락처를 입력해주세요.', 'error');
-        if (!formData.get('consultation_type_id')?.trim()) return updateFormResult('상담 분야를 선택해주세요.', 'error');
-        if (!formData.get('age_band')?.trim()) return updateFormResult('연령대를 선택해주세요.', 'error');
+        if (!phone) return updateFormResult(' 곕씫泥섎   낅젰 댁＜ 몄슂.', 'error');
+        if (!formData.get('consultation_type_id')?.trim()) return updateFormResult(' 곷떞 遺꾩빞瑜   좏깮 댁＜ 몄슂.', 'error');
+        if (!formData.get('age_band')?.trim()) return updateFormResult(' 곕졊  瑜   좏깮 댁＜ 몄슂.', 'error');
 
         const privacyAgreeInput = document.getElementById('privacyAgreeInput');
-        if (privacyAgreeInput && !privacyAgreeInput.checked) return updateFormResult('개인정보 수집 및 이용 동의가 필요합니다.', 'error');
+        if (privacyAgreeInput && !privacyAgreeInput.checked) return updateFormResult('媛쒖씤 뺣낫  섏쭛 諛   댁슜  숈쓽媛   꾩슂 ⑸땲  .', 'error');
 
         if (phoneInput) phoneInput.value = phone;
 
         const extraLines = [];
-        [['gender', '성별'], ['consultation_goal', '상담목적'], ['contact_time', '상담 가능 시간대']]
+        [['gender', ' 깅퀎'], ['consultation_goal', ' 곷떞紐⑹쟻'], ['contact_time', ' 곷떞 媛     쒓컙  ']]
           .forEach(([key, label]) => {
             const value = String(formData.get(key) || '').trim();
             if (value) extraLines.push(`${label}: ${value}`);
           });
 
         const originalMessage = String(formData.get('message') || '').trim();
-        if (originalMessage) extraLines.push(`문의내용: ${originalMessage}`);
+        if (originalMessage) extraLines.push(`臾몄쓽 댁슜: ${originalMessage}`);
 
         const messageInput = document.getElementById('messageInput');
         if (messageInput) messageInput.value = extraLines.join('\n');
 
         setSubmitState(true);
-        updateFormResult('상담 내용을 접수하고 있습니다...', 'pending');
+        updateFormResult(' 곷떞  댁슜    묒닔 섍퀬  덉뒿 덈떎...', 'pending');
 
         try {
           const response = await fetch(config.apiUrl, { method: 'POST', body: formData });
           const data = await response.json();
           if (data.success) {
-            updateFormResult(data.data || data.message || '상담 신청이 정상 접수되었습니다.', 'success');
+            updateFormResult(data.data || data.message || ' 곷떞  좎껌    뺤긽  묒닔 섏뿀 듬땲  .', 'success');
             form.reset();
             setTrackingFields();
           } else {
-            updateFormResult(data.message || '오류가 발생했습니다.', 'error');
+            updateFormResult(data.message || ' ㅻ쪟媛  諛쒖깮 덉뒿 덈떎.', 'error');
           }
         } catch (error) {
-          updateFormResult('통신 중 문제가 발생했습니다. 다시 시도해주세요.', 'error');
+          updateFormResult(' 듭떊 以  臾몄젣媛  諛쒖깮 덉뒿 덈떎.  ㅼ떆  쒕룄 댁＜ 몄슂.', 'error');
         } finally {
           setSubmitState(false);
         }
@@ -356,26 +377,26 @@
 
   function renderSettings() {
     const settings = state.bootstrap.settings || {};
-    const displayBrand = '보험플레이';
-    const footerBrand = 'WAYZI(보험플레이)';
-    const footerDescription = '대표 김도윤 · 사업자번호 538-42-01450';
+    const displayBrand = '蹂댄뿕 뚮젅  ';
+    const footerBrand = 'WAYZI(蹂댄뿕 뚮젅  )';
+    const footerDescription = '     源  꾩쑄 쨌  ъ뾽 먮쾲   538-42-01450';
     const heroImage = settings.hero_image || settings.hero_bg || '';
 
     setText('siteName', displayBrand);
     setText('footerSiteName', footerBrand);
     setText('siteNameInput', displayBrand, 'value');
     setText('footerDescription', footerDescription);
-    setText('heroTag1', settings.hero_tag_1 || '기존 보험 점검');
-    setText('heroTag2', settings.hero_tag_2 || '무료 보장분석');
-    setText('heroTag3', settings.hero_tag_3 || '1:1 맞춤 상담');
-    setHtml('heroTitle', convertLineBreaks(escapeHtml(settings.hero_title || '보험료는 계속 나가는데,\n뭐가 잘 들어가 있는지 헷갈리시나요?')));
-    setHtml('heroSubtitle', convertLineBreaks(escapeHtml(settings.hero_subtitle || '기존 보험이 잘 들어가 있는지 먼저 점검하고,\n부족한 보장만 내 상황에 맞게 정리해드립니다.')));
+    setText('heroTag1', settings.hero_tag_1 || '湲곗〈 蹂댄뿕  먭 ');
+    setText('heroTag2', settings.hero_tag_2 || '臾대즺 蹂댁옣遺꾩꽍');
+    setText('heroTag3', settings.hero_tag_3 || '1:1 留욎땄  곷떞');
+    setHtml('heroTitle', convertLineBreaks(escapeHtml(settings.hero_title || '蹂댄뿕猷뚮뒗 怨꾩냽  섍  붾뜲,\n萸먭      ㅼ뼱媛   덈뒗吏   룰컝由ъ떆 섏슂?')));
+    setHtml('heroSubtitle', convertLineBreaks(escapeHtml(settings.hero_subtitle || '湲곗〈 蹂댄뿕       ㅼ뼱媛   덈뒗吏  癒쇱   먭  섍퀬,\n遺 議깊븳 蹂댁옣留      곹솴   留욊쾶  뺣━ 대뱶由쎈땲  .')));
     setHtml('identityTitle', (() => {
-      const text = settings.identity_title || '보험플레이는\n상품을 밀어넣기보다 먼저 정리하는 상담을 합니다.';
+      const text = settings.identity_title || '蹂댄뿕 뚮젅 대뒗\n 곹뭹   諛  대꽔湲곕낫   癒쇱   뺣━ 섎뒗  곷떞    ⑸땲  .';
       const parts = text.split('\n');
       return parts.length > 1 ? `${escapeHtml(parts[0])}<br><span>${escapeHtml(parts.slice(1).join(' '))}</span>` : `<span>${escapeHtml(text)}</span>`;
     })());
-    setHtml('identityDesc', convertLineBreaks(escapeHtml(settings.identity_desc || '보험 상담이 어려운 이유는 상품이 많아서가 아니라,\n내 보험이 지금 어떤 상태인지 알기 어렵기 때문입니다.\n\n보험플레이는 기존 보험이 있다면 중복과 부족을 먼저 보고,\n새로 준비해야 한다면 꼭 필요한 보장부터 우선순위를 정리해드립니다.')));
+    setHtml('identityDesc', convertLineBreaks(escapeHtml(settings.identity_desc || '蹂댄뿕  곷떞    대젮    댁쑀    곹뭹   留롮븘 쒓   꾨땲  ,\n   蹂댄뿕   吏 湲   대뼡  곹깭 몄   뚭린  대졄湲   뚮Ц 낅땲  .\n\n蹂댄뿕 뚮젅 대뒗 湲곗〈 蹂댄뿕    덈떎硫  以묐났怨  遺 議깆쓣 癒쇱  蹂닿퀬,\n 덈줈 以 鍮꾪빐    쒕떎硫  瑗   꾩슂   蹂댁옣遺     곗꽑 쒖쐞瑜   뺣━ 대뱶由쎈땲  .')));
 
     const heroBg = document.getElementById('heroBg');
     if (heroBg && heroImage) {
@@ -388,7 +409,7 @@
     const categories = ['ALL', ...new Set((state.bootstrap.products || []).map(item => item.category).filter(Boolean))];
     productFilters.innerHTML = categories.map(category => {
       const isActive = state.activeCategory === category ? ' is-active' : '';
-      const label = category === 'ALL' ? '전체 상담' : category;
+      const label = category === 'ALL' ? ' 꾩껜  곷떞' : category;
       return `<button type="button" class="filter-chip${isActive}" data-category="${escapeAttribute(category)}">${escapeHtml(label)}</button>`;
     }).join('');
   }
@@ -398,7 +419,7 @@
     const products = (state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory);
 
     if (!products.length) {
-      productGrid.innerHTML = `<div class="section-empty">현재 준비된 상담 분야가 없습니다. 바로 상담 신청을 남겨주시면 순차적으로 안내드립니다.</div>`;
+      productGrid.innerHTML = `<div class="section-empty"> 꾩옱 以 鍮꾨맂  곷떞 遺꾩빞媛   놁뒿 덈떎. 諛붾줈  곷떞  좎껌    ④꺼二쇱떆硫   쒖감 곸쑝濡   덈궡 쒕┰ 덈떎.</div>`;
       return;
     }
 
@@ -410,32 +431,34 @@
             ${imageUrl ? `<img src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(product.title || '')}" />` : ''}
             <div class="product-visual-inner">
               <div class="product-badges">
-                <span class="product-badge">${escapeHtml(product.category || '보험상담')}</span>
+                <span class="product-badge">${escapeHtml(product.category || '蹂댄뿕 곷떞')}</span>
                 ${product.subtitle ? `<span class="product-badge">${escapeHtml(product.subtitle)}</span>` : ''}
               </div>
-              <h3 class="product-title">${escapeHtml(product.title || '보험 상담')}</h3>
+              <h3 class="product-title">${escapeHtml(product.title || '蹂댄뿕  곷떞')}</h3>
             </div>
           </div>
           <div class="product-content">
             <p class="product-summary">${escapeHtml(product.summary || '')}</p>
             <div class="product-meta">
-              ${metaItem('추천대상', product.target || '-')}
-              ${metaItem('상담포인트', product.point || '-')}
+              ${metaItem('異붿쿇    ', product.target || '-')}
+              ${metaItem(' 곷떞 ъ씤  ', product.point || '-')}
             </div>
             <div class="product-actions">
-              <a href="#contact" class="btn" data-select-product="${escapeAttribute(product.product_id)}">상담 신청</a>
+              <a href="#contact" class="btn" data-select-product="${escapeAttribute(product.product_id)}"> 곷떞  좎껌</a>
             </div>
           </div>
         </article>
       `;
     }).join('');
+
+    setupMobileProductSlider();
   }
 
   function renderReviews() {
     if (!reviewGrid) return;
     const reviews = state.bootstrap.reviews || [];
     if (!reviews.length) {
-      reviewGrid.innerHTML = `<div class="section-empty">준비 중인 후기가 곧 업데이트됩니다.</div>`;
+      reviewGrid.innerHTML = `<div class="section-empty">以 鍮  以묒씤  꾧린媛  怨   낅뜲 댄듃 ⑸땲  .</div>`;
       if (reviewDots) reviewDots.innerHTML = '';
       return;
     }
@@ -449,7 +472,7 @@
           </div>
           <div class="review-body">
             ${review.category ? `<span class="review-region">${escapeHtml(review.category)}</span>` : ''}
-            <h3>${escapeHtml(review.title || '상담 후기')}</h3>
+            <h3>${escapeHtml(review.title || ' 곷떞  꾧린')}</h3>
             <p>${escapeHtml(review.summary || '')}</p>
           </div>
         </article>
@@ -463,7 +486,7 @@
     if (!targetGrid) return;
     const items = state.bootstrap.targets || [];
     if (!items.length) {
-      targetGrid.innerHTML = `<div class="section-empty">준비 중입니다.</div>`;
+      targetGrid.innerHTML = `<div class="section-empty">以 鍮  以묒엯 덈떎.</div>`;
       return;
     }
     targetGrid.innerHTML = items.map(item => `
@@ -479,7 +502,7 @@
     if (!faqList) return;
     const items = state.bootstrap.faqs || [];
     if (!items.length) {
-      faqList.innerHTML = `<div class="section-empty">준비 중입니다.</div>`;
+      faqList.innerHTML = `<div class="section-empty">以 鍮  以묒엯 덈떎.</div>`;
       return;
     }
     faqList.innerHTML = items.map(item => `
@@ -492,29 +515,13 @@
 
   function populateConsultationTypes() {
     if (!consultationTypeSelect) return;
-    consultationTypeSelect.innerHTML = `<option value="">선택해주세요</option>` +
+    consultationTypeSelect.innerHTML = `<option value=""> 좏깮 댁＜ 몄슂</option>` +
       (state.bootstrap.products || []).map(item => `<option value="${escapeAttribute(item.product_id)}">${escapeHtml(item.title || item.product_id)}</option>`).join('');
   }
 
   function openProduct(productId) {
-    const product = (state.bootstrap.products || []).find(
-      item => String(item.product_id).trim() === String(productId).trim()
-    );
+    const product = (state.bootstrap.products || []).find(item => String(item.product_id).trim() === String(productId).trim());
     if (!product || !modalBody || !modal) return;
-
-    const fitCases = [product.fit_case_1, product.fit_case_2, product.fit_case_3].filter(Boolean);
-    const checkItems = [
-      product.point_1,
-      product.point_2,
-      product.point_3,
-      product.check_item_4,
-      product.check_item_5,
-      product.check_item_6
-    ].filter(Boolean);
-    const results = [product.result_1, product.result_2, product.result_3].filter(Boolean);
-
-    const leadText = product.summary_medium || product.description || product.summary || '';
-    const ctaText = product.cta_text || '이 분야로 상담 신청';
 
     modalBody.innerHTML = `
       <section class="modal-card">
@@ -522,69 +529,19 @@
           ${product.category ? `<span class="modal-badge">${escapeHtml(product.category)}</span>` : ''}
           ${product.subtitle ? `<span class="modal-badge">${escapeHtml(product.subtitle)}</span>` : ''}
         </div>
-
         <h3>${escapeHtml(product.title || '')}</h3>
-
-        ${leadText ? `
-          <p style="margin:12px 0 0; font-size:17px; line-height:1.8; color:#475467; word-break:keep-all;">
-            ${escapeHtml(leadText)}
-          </p>
-        ` : ''}
-
+        <p>${escapeHtml(product.description || product.summary || '')}</p>
         <div class="modal-meta-grid">
-          ${metaBox('추천대상', product.target || '-')}
-          ${metaBox('상담포인트', product.point || '-')}
-          ${metaBox('상담방향', product.subtitle || '-')}
+          ${metaBox('異붿쿇    ', product.target || '-')}
+          ${metaBox(' 곷떞 ъ씤  ', product.point || '-')}
+          ${metaBox(' 곷떞諛⑺뼢', product.subtitle || '-')}
         </div>
-
-        ${product.why_now_title || product.why_now_desc ? `
-          <div style="margin-top:24px;">
-            <h4 style="margin:0 0 10px; font-size:20px; line-height:1.4; color:#111827;">
-              ${escapeHtml(product.why_now_title || '왜 이 상담이 필요할까요?')}
-            </h4>
-            <p style="margin:0; font-size:16px; line-height:1.85; color:#4b5563; word-break:keep-all;">
-              ${escapeHtml(product.why_now_desc || '')}
-            </p>
-          </div>
-        ` : ''}
-
-        ${fitCases.length ? `
-          <div style="margin-top:24px;">
-            <h4 style="margin:0 0 12px; font-size:20px; line-height:1.4; color:#111827;">
-              이런 분께 잘 맞습니다
-            </h4>
-            <ul class="modal-points">
-              ${fitCases.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
-            </ul>
-          </div>
-        ` : ''}
-
-        ${checkItems.length ? `
-          <div style="margin-top:24px;">
-            <h4 style="margin:0 0 12px; font-size:20px; line-height:1.4; color:#111827;">
-              상담에서 확인하는 핵심 항목
-            </h4>
-            <ul class="modal-points">
-              ${checkItems.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
-            </ul>
-          </div>
-        ` : ''}
-
-        ${results.length ? `
-          <div style="margin-top:24px;">
-            <h4 style="margin:0 0 12px; font-size:20px; line-height:1.4; color:#111827;">
-              상담 후 이렇게 정리됩니다
-            </h4>
-            <ul class="modal-points">
-              ${results.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
-            </ul>
-          </div>
-        ` : ''}
-
+        ${(product.point_1 || product.point_2 || product.point_3) ? `
+          <ul class="modal-points">
+            ${[product.point_1, product.point_2, product.point_3].filter(Boolean).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+          </ul>` : ''}
         <div class="modal-action">
-          <a href="#contact" class="btn" data-select-product="${escapeAttribute(product.product_id)}">
-            ${escapeHtml(ctaText)}
-          </a>
+          <a href="#contact" class="btn" data-select-product="${escapeAttribute(product.product_id)}">   遺꾩빞濡   곷떞  좎껌</a>
         </div>
       </section>
     `;
@@ -624,13 +581,21 @@
       return;
     }
 
-    prev?.classList.remove('is-hidden');
-    next?.classList.remove('is-hidden');
+    if (window.innerWidth <= 720) {
+      prev?.classList.add('is-hidden');
+      next?.classList.add('is-hidden');
+    } else {
+      prev?.classList.remove('is-hidden');
+      next?.classList.remove('is-hidden');
+    }
+
     if (reviewDots) reviewDots.className = 'review-dots';
 
-    const gap = 22;
     const viewportWidth = reviewViewport ? reviewViewport.clientWidth : 0;
-    const cardWidth = (viewportWidth - gap) / perView;
+    const isMobile = window.innerWidth <= 720;
+    const gap = isMobile ? 0 : 22;
+    const cardWidth = isMobile ? viewportWidth : (viewportWidth - gap) / perView;
+
     reviewGrid.style.transform = `translateX(-${state.reviewPage * (cardWidth + gap)}px)`;
 
     if (reviewDots) {
@@ -660,6 +625,62 @@
     if (reviewAutoTimer) {
       window.clearInterval(reviewAutoTimer);
       reviewAutoTimer = null;
+    }
+  }
+
+  function setupMobileProductSlider() {
+    stopProductAuto();
+    if (!productGrid) return;
+
+    if (window.innerWidth > 768) {
+      productGrid.scrollLeft = 0;
+      return;
+    }
+
+    const cards = productGrid.querySelectorAll('.product-card');
+    if (!cards.length || cards.length <= 1) return;
+
+    if (!productGrid.dataset.mobileSliderBound) {
+      productGrid.dataset.mobileSliderBound = 'Y';
+
+      productGrid.addEventListener('touchstart', stopProductAuto, { passive: true });
+      productGrid.addEventListener('mouseenter', stopProductAuto);
+      productGrid.addEventListener('mouseleave', () => startProductAuto());
+      productGrid.addEventListener('touchend', () => startProductAuto(), { passive: true });
+    }
+
+    startProductAuto();
+  }
+
+  function startProductAuto() {
+    stopProductAuto();
+    if (!productGrid || window.innerWidth > 768) return;
+
+    const cards = Array.from(productGrid.querySelectorAll('.product-card'));
+    if (cards.length <= 1) return;
+
+    productAutoTimer = window.setInterval(() => {
+      const currentLeft = productGrid.scrollLeft;
+      let currentIndex = 0;
+
+      cards.forEach((card, index) => {
+        if (Math.abs(card.offsetLeft - currentLeft) < Math.abs(cards[currentIndex].offsetLeft - currentLeft)) {
+          currentIndex = index;
+        }
+      });
+
+      const nextIndex = currentIndex >= cards.length - 1 ? 0 : currentIndex + 1;
+      productGrid.scrollTo({
+        left: cards[nextIndex].offsetLeft,
+        behavior: 'smooth'
+      });
+    }, 4200);
+  }
+
+  function stopProductAuto() {
+    if (productAutoTimer) {
+      window.clearInterval(productAutoTimer);
+      productAutoTimer = null;
     }
   }
 
@@ -696,7 +717,7 @@
     const button = document.getElementById('formSubmitButton');
     if (!button) return;
     button.disabled = isSubmitting;
-    button.textContent = isSubmitting ? '접수 중...' : '상담 신청하기';
+    button.textContent = isSubmitting ? ' 묒닔 以 ...' : ' 곷떞  좎껌 섍린';
   }
 
   function scrollToSection(id) {
