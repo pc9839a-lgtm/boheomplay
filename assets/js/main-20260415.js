@@ -8,8 +8,7 @@
       settings: {}, products: [], reviews: [], targets: [], faqs: []
     },
     activeCategory: 'ALL',
-    reviewPage: 0,
-    productPage: 0
+    reviewPage: 0
   };
 
   const productGrid = document.getElementById('productGrid');
@@ -34,10 +33,10 @@
 
   let reviewAutoTimer = null;
   let productAutoTimer = null;
-  let reviewTouchStartX = 0;
-  let reviewTouchEndX = 0;
   let productTouchStartX = 0;
-  let productTouchEndX = 0;
+  let productTouchCurrentX = 0;
+  let reviewTouchStartX = 0;
+  let reviewTouchCurrentX = 0;
 
   init();
 
@@ -48,7 +47,7 @@
     const payload = await resolveBootstrapPayload();
     hydrate(payload);
     exposeManualRefresh();
-    updateStickyInquiryVisibility();
+    syncStickyInquiryBar();
   }
 
   async function resolveBootstrapPayload() {
@@ -169,7 +168,6 @@
       const filterButton = target.closest('[data-category]');
       if (filterButton) {
         state.activeCategory = filterButton.getAttribute('data-category') || 'ALL';
-        state.productPage = 0;
         renderFilters();
         renderProducts();
         return;
@@ -216,11 +214,10 @@
     window.addEventListener('resize', () => {
       setupReviewSlider((state.bootstrap.reviews || []).length);
       setupProductSlider((state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory).length);
-      updateStickyInquiryVisibility();
+      syncStickyInquiryBar();
     });
 
-    window.addEventListener('scroll', updateStickyInquiryVisibility, { passive: true });
-    window.addEventListener('hashchange', updateStickyInquiryVisibility);
+    window.addEventListener('scroll', syncStickyInquiryBar, { passive: true });
 
     window.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') {
@@ -232,33 +229,18 @@
     if (reviewViewport) {
       reviewViewport.addEventListener('mouseenter', stopReviewAuto);
       reviewViewport.addEventListener('mouseleave', () => setupReviewSlider((state.bootstrap.reviews || []).length));
-      reviewViewport.addEventListener('touchstart', (event) => {
-        stopReviewAuto();
-        reviewTouchStartX = event.changedTouches[0].clientX;
-      }, { passive: true });
-      reviewViewport.addEventListener('touchend', (event) => {
-        reviewTouchEndX = event.changedTouches[0].clientX;
-        handleReviewSwipe();
-        setupReviewSlider((state.bootstrap.reviews || []).length);
-      }, { passive: true });
+      reviewViewport.addEventListener('touchstart', handleReviewTouchStart, { passive: true });
+      reviewViewport.addEventListener('touchmove', handleReviewTouchMove, { passive: true });
+      reviewViewport.addEventListener('touchend', handleReviewTouchEnd, { passive: true });
     }
 
     if (productGrid) {
       productGrid.addEventListener('mouseenter', stopProductAuto);
-      productGrid.addEventListener('mouseleave', () => {
-        const count = (state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory).length;
-        setupProductSlider(count);
-      });
-      productGrid.addEventListener('touchstart', (event) => {
-        stopProductAuto();
-        productTouchStartX = event.changedTouches[0].clientX;
-      }, { passive: true });
-      productGrid.addEventListener('touchend', (event) => {
-        productTouchEndX = event.changedTouches[0].clientX;
-        handleProductSwipe();
-        const count = (state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory).length;
-        setupProductSlider(count);
-      }, { passive: true });
+      productGrid.addEventListener('mouseleave', () => setupProductSlider((state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory).length));
+      productGrid.addEventListener('touchstart', handleProductTouchStart, { passive: true });
+      productGrid.addEventListener('touchmove', handleProductTouchMove, { passive: true });
+      productGrid.addEventListener('touchend', handleProductTouchEnd, { passive: true });
+      productGrid.addEventListener('scroll', debounceProductAutoRestart, { passive: true });
     }
 
     if (phoneInput) {
@@ -376,7 +358,7 @@
     renderTargets();
     renderFaqs();
     populateConsultationTypes();
-    updateStickyInquiryVisibility();
+    syncStickyInquiryBar();
   }
 
   function normalizeData(data) {
@@ -481,6 +463,7 @@
     if (!reviews.length) {
       reviewGrid.innerHTML = `<div class="section-empty">준비 중인 후기가 곧 업데이트됩니다.</div>`;
       if (reviewDots) reviewDots.innerHTML = '';
+      stopReviewAuto();
       return;
     }
 
@@ -540,7 +523,6 @@
       (state.bootstrap.products || []).map(item => `<option value="${escapeAttribute(item.product_id)}">${escapeHtml(item.title || item.product_id)}</option>`).join('');
   }
 
-  // 원래 모달 구조 그대로 유지
   function openProduct(productId) {
     const product = (state.bootstrap.products || []).find(item => String(item.product_id).trim() === String(productId).trim());
     if (!product || !modalBody || !modal) return;
@@ -570,12 +552,14 @@
 
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    syncStickyInquiryBar();
   }
 
   function closeModal() {
     modal?.setAttribute('aria-hidden', 'true');
     if (privacyPopup?.getAttribute('aria-hidden') === 'false') return;
     document.body.style.overflow = '';
+    syncStickyInquiryBar();
   }
 
   function getReviewPerView() {
@@ -607,7 +591,7 @@
     next?.classList.remove('is-hidden');
     if (reviewDots) reviewDots.className = 'review-dots';
 
-    const gap = window.innerWidth <= 720 ? 16 : 22;
+    const gap = window.innerWidth <= 720 ? 0 : 22;
     const viewportWidth = reviewViewport ? reviewViewport.clientWidth : 0;
     const cardWidth = perView === 1 ? viewportWidth : (viewportWidth - gap) / perView;
     reviewGrid.style.transform = `translateX(-${state.reviewPage * (cardWidth + gap)}px)`;
@@ -632,7 +616,9 @@
 
   function startReviewAuto(total) {
     stopReviewAuto();
-    if (total > getReviewPerView()) reviewAutoTimer = window.setInterval(() => moveReviews('next'), 3600);
+    if (total > getReviewPerView()) {
+      reviewAutoTimer = window.setInterval(() => moveReviews('next'), 3600);
+    }
   }
 
   function stopReviewAuto() {
@@ -642,63 +628,35 @@
     }
   }
 
-  function handleReviewSwipe() {
-    const deltaX = reviewTouchEndX - reviewTouchStartX;
-    if (Math.abs(deltaX) < 40) return;
-    if (deltaX < 0) {
-      moveReviews('next');
-    } else {
-      moveReviews('prev');
-    }
-  }
-
   function setupProductSlider(total) {
     if (!productGrid) return;
-    if (window.innerWidth > 720 || total <= 1) {
+
+    const isMobile = window.innerWidth <= 720;
+    if (!isMobile || total <= 1) {
       stopProductAuto();
       return;
     }
 
-    const cards = productGrid.querySelectorAll('.product-card');
-    if (!cards.length) {
-      stopProductAuto();
-      return;
-    }
-
-    state.productPage = Math.min(state.productPage, cards.length - 1);
-    scrollProductToIndex(state.productPage, false);
-    startProductAuto(total);
+    startProductAuto();
   }
 
-  function scrollProductToIndex(index, smooth) {
-    if (!productGrid) return;
-    const cards = productGrid.querySelectorAll('.product-card');
-    if (!cards.length) return;
-    const targetCard = cards[index];
-    if (!targetCard) return;
-
-    const left = targetCard.offsetLeft - productGrid.offsetLeft;
-    productGrid.scrollTo({ left: left, behavior: smooth ? 'smooth' : 'auto' });
-  }
-
-  function moveProducts(direction) {
-    if (!productGrid) return;
-    const cards = productGrid.querySelectorAll('.product-card');
-    if (!cards.length) return;
-    const maxPage = Math.max(0, cards.length - 1);
-
-    state.productPage = direction === 'prev'
-      ? (state.productPage <= 0 ? maxPage : state.productPage - 1)
-      : (state.productPage >= maxPage ? 0 : state.productPage + 1);
-
-    scrollProductToIndex(state.productPage, true);
-  }
-
-  function startProductAuto(total) {
+  function startProductAuto() {
     stopProductAuto();
-    if (window.innerWidth <= 720 && total > 1) {
-      productAutoTimer = window.setInterval(() => moveProducts('next'), 3800);
-    }
+    if (!productGrid || window.innerWidth > 720) return;
+
+    productAutoTimer = window.setInterval(function () {
+      const card = productGrid.querySelector('.product-card');
+      if (!card) return;
+      const step = card.getBoundingClientRect().width + 14;
+      const maxScroll = productGrid.scrollWidth - productGrid.clientWidth;
+      const nextLeft = productGrid.scrollLeft + step;
+
+      if (nextLeft >= maxScroll - 8) {
+        productGrid.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        productGrid.scrollTo({ left: nextLeft, behavior: 'smooth' });
+      }
+    }, 3200);
   }
 
   function stopProductAuto() {
@@ -708,34 +666,62 @@
     }
   }
 
-  function handleProductSwipe() {
-    const deltaX = productTouchEndX - productTouchStartX;
-    if (Math.abs(deltaX) < 40) return;
-    if (deltaX < 0) {
-      moveProducts('next');
-    } else {
-      moveProducts('prev');
-    }
+  let productAutoRestartTimer = null;
+  function debounceProductAutoRestart() {
+    if (window.innerWidth > 720) return;
+    stopProductAuto();
+    if (productAutoRestartTimer) window.clearTimeout(productAutoRestartTimer);
+    productAutoRestartTimer = window.setTimeout(() => startProductAuto(), 1800);
   }
 
-  function updateStickyInquiryVisibility() {
-    if (!stickyInquiryBar) return;
-    if (!contactSection) {
-      stickyInquiryBar.style.display = '';
-      return;
+  function handleProductTouchStart(event) {
+    if (window.innerWidth > 720) return;
+    stopProductAuto();
+    productTouchStartX = event.touches[0].clientX;
+    productTouchCurrentX = productTouchStartX;
+  }
+
+  function handleProductTouchMove(event) {
+    if (window.innerWidth > 720) return;
+    productTouchCurrentX = event.touches[0].clientX;
+  }
+
+  function handleProductTouchEnd() {
+    if (window.innerWidth > 720) return;
+    const deltaX = productTouchStartX - productTouchCurrentX;
+    const card = productGrid?.querySelector('.product-card');
+    if (card && Math.abs(deltaX) > 40) {
+      const step = card.getBoundingClientRect().width + 14;
+      const nextLeft = deltaX > 0 ? productGrid.scrollLeft + step : productGrid.scrollLeft - step;
+      productGrid.scrollTo({ left: Math.max(0, nextLeft), behavior: 'smooth' });
     }
+    debounceProductAutoRestart();
+  }
 
-    const rect = contactSection.getBoundingClientRect();
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    const isContactVisible = rect.top < viewportHeight - 80 && rect.bottom > 120;
+  function handleReviewTouchStart(event) {
+    stopReviewAuto();
+    reviewTouchStartX = event.touches[0].clientX;
+    reviewTouchCurrentX = reviewTouchStartX;
+  }
 
-    stickyInquiryBar.style.display = isContactVisible ? 'none' : '';
+  function handleReviewTouchMove(event) {
+    reviewTouchCurrentX = event.touches[0].clientX;
+  }
+
+  function handleReviewTouchEnd() {
+    const deltaX = reviewTouchStartX - reviewTouchCurrentX;
+    if (Math.abs(deltaX) > 40) {
+      moveReviews(deltaX > 0 ? 'next' : 'prev');
+    } else {
+      setupReviewSlider((state.bootstrap.reviews || []).length);
+    }
   }
 
   function openPrivacyPopup() {
     if (!privacyPopup) return;
     privacyPopup.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    syncStickyInquiryBar();
   }
 
   function closePrivacyPopup() {
@@ -743,6 +729,7 @@
     privacyPopup.setAttribute('aria-hidden', 'true');
     if (modal?.getAttribute('aria-hidden') === 'false') return;
     document.body.style.overflow = '';
+    syncStickyInquiryBar();
   }
 
   function setTrackingFields() {
@@ -770,6 +757,23 @@
 
   function scrollToSection(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function syncStickyInquiryBar() {
+    if (!stickyInquiryBar) return;
+
+    const shouldHideForContact = contactSection && isElementInViewport(contactSection, 120);
+    const modalOpen = modal && modal.getAttribute('aria-hidden') === 'false';
+    const privacyOpen = privacyPopup && privacyPopup.getAttribute('aria-hidden') === 'false';
+
+    stickyInquiryBar.classList.toggle('is-hidden-by-contact', !!(shouldHideForContact || modalOpen || privacyOpen));
+  }
+
+  function isElementInViewport(element, offset) {
+    if (!element) return false;
+    const rect = element.getBoundingClientRect();
+    const topOffset = Number(offset || 0);
+    return rect.top <= window.innerHeight - topOffset && rect.bottom >= topOffset;
   }
 
   function setText(id, value, mode) {
