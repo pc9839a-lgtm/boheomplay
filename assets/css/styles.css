@@ -289,6 +289,7 @@ button { appearance: none; }
   color: var(--text-soft);
   font-size: 1.14rem;
   line-height: 1.9;
+  max-width: 760px;
 }
 .title-divider {
   width: 82px;
@@ -298,6 +299,50 @@ button { appearance: none; }
   background: linear-gradient(90deg, #2563eb, #89b0ff);
 }
 .identity-section { padding-top: 108px; padding-bottom: 72px; }
+.identity-section .narrow-block { text-align: center; }
+.identity-section .identity-title,
+.identity-section .identity-desc { max-width: 920px; margin-left: auto; margin-right: auto; }
+.identity-section .identity-desc { font-size: 1.12rem; }
+
+/* =========================
+   motion
+========================= */
+@keyframes fadeUpSoft {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 14px 28px rgba(37, 99, 235, 0.20); }
+  50% { box-shadow: 0 18px 38px rgba(37, 99, 235, 0.32); }
+}
+.hero-animate { animation: fadeUpSoft 0.8s cubic-bezier(.22,1,.36,1) both; }
+.hero-animate-delay { animation: fadeUpSoft 0.95s 0.14s cubic-bezier(.22,1,.36,1) both; }
+.hero-float-card { animation: floatSoft 5.6s ease-in-out infinite; }
+.hero-float-card-b { animation-delay: 0.4s; }
+.hero-float-card-c { animation-delay: 0.8s; }
+.identity-section .section-label,
+.identity-section .identity-title,
+.identity-section .title-divider,
+.identity-section .identity-desc,
+.trust-card,
+.contact-card { animation: fadeUpSoft 0.85s cubic-bezier(.22,1,.36,1) both; }
+.outcomes-grid .reveal-card,
+.process-grid .reveal-card,
+#targetGrid .extra-card,
+.review-card,
+.product-card { animation: fadeUpSoft 0.75s cubic-bezier(.22,1,.36,1) both; }
+.outcomes-grid .reveal-card:nth-child(1),
+.process-grid .reveal-card:nth-child(1) { animation-delay: 0.04s; }
+.outcomes-grid .reveal-card:nth-child(2),
+.process-grid .reveal-card:nth-child(2) { animation-delay: 0.12s; }
+.outcomes-grid .reveal-card:nth-child(3),
+.process-grid .reveal-card:nth-child(3) { animation-delay: 0.2s; }
+.outcomes-grid .reveal-card:nth-child(4) { animation-delay: 0.28s; }
+
 
 /* =========================
    outcomes / generic cards
@@ -322,17 +367,17 @@ button { appearance: none; }
   border-color: #c5d5f4;
 }
 .extra-card h3 {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   color: #081a3c;
-  font-size: 1.7rem;
-  line-height: 1.32;
+  font-size: 1.46rem;
+  line-height: 1.34;
   letter-spacing: -0.04em;
 }
 .extra-card p {
   margin: 0;
   color: var(--text-soft);
-  font-size: 1.03rem;
-  line-height: 1.88;
+  font-size: 0.98rem;
+  line-height: 1.78;
 }
 .extra-chip {
   display: inline-flex;
@@ -352,13 +397,13 @@ button { appearance: none; }
   gap: 26px;
   margin-top: 34px;
 }
-#outcomes .extra-card { min-height: 250px; position: relative; overflow: hidden; }
+#outcomes .extra-card { min-height: 208px; padding: 24px 24px 22px; position: relative; overflow: hidden; }
 #outcomes .extra-card::before {
   position: absolute;
   top: 22px;
   right: 22px;
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -653,18 +698,18 @@ button { appearance: none; }
 #process .extra-grid::before {
   content: "";
   position: absolute;
-  left: 9%;
-  right: 9%;
-  top: 44px;
+  left: 10%;
+  right: 10%;
+  top: 40px;
   height: 2px;
-  background: linear-gradient(90deg, rgba(37,99,235,0.16), rgba(37,99,235,0.28), rgba(37,99,235,0.16));
+  background: linear-gradient(90deg, rgba(37,99,235,0.12), rgba(37,99,235,0.24), rgba(37,99,235,0.12));
   z-index: 0;
 }
-#process .extra-card { position: relative; z-index: 1; min-height: 210px; padding-top: 86px; }
+#process .extra-card { position: relative; z-index: 1; min-height: 186px; padding: 78px 24px 24px; }
 #process .extra-card::before {
   position: absolute;
-  top: 24px;
-  left: 28px;
+  top: 20px;
+  left: 24px;
   width: 52px;
   height: 52px;
   border-radius: 999px;
@@ -966,7 +1011,7 @@ button { appearance: none; }
   right: 0;
   bottom: 0;
   z-index: 90;
-  padding: 14px 20px 18px;
+  padding: 10px 18px 12px;
   background: rgba(7, 18, 43, 0.92);
   backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255,255,255,0.08);
@@ -979,17 +1024,17 @@ button { appearance: none; }
   transform: translateY(20px);
 }
 .sib-content {
-  width: min(calc(100% - 48px), 1160px);
+  width: min(calc(100% - 48px), 1120px);
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 .sib-text-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .sib-badge {
@@ -1006,21 +1051,20 @@ button { appearance: none; }
 .sib-title {
   margin: 0;
   color: #ffffff;
-  font-size: 1.15rem;
+  font-size: 1rem;
+  line-height: 1.4;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 .sib-sub {
-  color: rgba(228, 235, 248, 0.78);
-  font-size: 0.95rem;
-  font-weight: 600;
+  display: none;
 }
 .sib-btn-group { display: flex; align-items: center; }
 .sib-btn {
-  min-width: 198px;
-  min-height: 52px;
-  padding: 0 24px;
-  border-radius: 18px;
+  min-width: 154px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 16px;
   background: linear-gradient(135deg, #2563eb, #3f7cf5);
   color: #ffffff;
   display: inline-flex;
@@ -1028,6 +1072,7 @@ button { appearance: none; }
   justify-content: center;
   font-weight: 800;
   box-shadow: 0 14px 28px rgba(37, 99, 235, 0.20);
+  animation: pulseGlow 2.8s ease-in-out infinite;
 }
 
 /* =========================
@@ -1298,6 +1343,7 @@ button { appearance: none; }
   .identity-title {
     font-size: 2.2rem;
     line-height: 1.22;
+    text-align: center;
   }
   .section-description,
   .identity-desc,
@@ -1320,10 +1366,23 @@ button { appearance: none; }
     padding-left: 20px;
     padding-right: 20px;
   }
+  #outcomes .extra-card {
+    min-height: 182px;
+  }
+  #process .extra-card {
+    min-height: 174px;
+    padding-top: 72px;
+  }
 
   .products-section .section-topline {
     gap: 14px;
     margin-bottom: 20px;
+  }
+  .identity-section .narrow-block,
+  .targets-section .section-head,
+  .trust-card,
+  #process .section-head {
+    text-align: center;
   }
   .products-section .section-mini-copy {
     margin-top: 10px;
