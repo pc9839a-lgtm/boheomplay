@@ -1,4 +1,3 @@
-
 (function () {
   const config = window.APP_CONFIG || {};
   const CACHE_KEY = 'boheomplay_bootstrap_cache_v20260414_05';
@@ -29,16 +28,8 @@
   const modalBody = document.getElementById('productModalBody');
   const privacyPopup = document.getElementById('privacyPopup');
   const openPrivacyPopupButton = document.getElementById('openPrivacyPopup');
-  const stickyInquiryBar = document.getElementById('stickyInquiryBar');
-  const contactSection = document.getElementById('contact');
 
   let reviewAutoTimer = null;
-  let productAutoTimer = null;
-  let reviewTouchStartX = 0;
-  let reviewTouchDeltaX = 0;
-  let productTouchStartX = 0;
-  let productTouchDeltaX = 0;
-  let contactObserver = null;
 
   init();
 
@@ -46,10 +37,13 @@
     bindStaticEvents();
     setTrackingFields();
 
+    if (!config.apiUrl) {
+      console.error('[boheomplay] APP_CONFIG.apiUrl is missing');
+    }
+
     const payload = await resolveBootstrapPayload();
     hydrate(payload);
     exposeManualRefresh();
-    setupContactStickyObserver();
   }
 
   async function resolveBootstrapPayload() {
@@ -57,12 +51,7 @@
       return normalizeData(window.MOCK_BOOTSTRAP_DATA || {});
     }
 
-    const forceRefresh = shouldForceRefreshFromUrl();
     const cachedPayload = getCachedBootstrap();
-
-    if (cachedPayload && !forceRefresh) {
-      return cachedPayload;
-    }
 
     try {
       const remotePayload = await loadBootstrapFromApi();
@@ -71,6 +60,7 @@
       clearRefreshParamsFromUrl();
       return normalized;
     } catch (error) {
+      console.error('[boheomplay] bootstrap remote load failed:', error);
       if (cachedPayload) {
         return cachedPayload;
       }
@@ -215,7 +205,6 @@
 
     window.addEventListener('resize', () => {
       setupReviewSlider((state.bootstrap.reviews || []).length);
-      setupProductSlider();
     });
 
     window.addEventListener('keydown', (event) => {
@@ -228,18 +217,8 @@
     if (reviewViewport) {
       reviewViewport.addEventListener('mouseenter', stopReviewAuto);
       reviewViewport.addEventListener('mouseleave', () => setupReviewSlider((state.bootstrap.reviews || []).length));
-      reviewViewport.addEventListener('touchstart', onReviewTouchStart, { passive: true });
-      reviewViewport.addEventListener('touchmove', onReviewTouchMove, { passive: true });
-      reviewViewport.addEventListener('touchend', onReviewTouchEnd, { passive: true });
-    }
-
-    if (productGrid) {
-      productGrid.addEventListener('mouseenter', stopProductAuto);
-      productGrid.addEventListener('mouseleave', startProductAuto);
-      productGrid.addEventListener('touchstart', onProductTouchStart, { passive: true });
-      productGrid.addEventListener('touchmove', onProductTouchMove, { passive: true });
-      productGrid.addEventListener('touchend', onProductTouchEnd, { passive: true });
-      productGrid.addEventListener('scroll', onProductScroll, { passive: true });
+      reviewViewport.addEventListener('touchstart', stopReviewAuto, { passive: true });
+      reviewViewport.addEventListener('touchend', () => setupReviewSlider((state.bootstrap.reviews || []).length), { passive: true });
     }
 
     if (phoneInput) {
@@ -306,6 +285,7 @@
       const params = new URLSearchParams();
       params.set('action', 'bootstrap');
       params.set('callback', callbackName);
+      params.set('_ts', String(Date.now()));
 
       const script = document.createElement('script');
       const requestUrl = config.apiUrl + '?' + params.toString();
@@ -357,8 +337,6 @@
     renderTargets();
     renderFaqs();
     populateConsultationTypes();
-    setupProductSlider();
-    setupContactStickyObserver();
   }
 
   function normalizeData(data) {
@@ -420,8 +398,6 @@
     if (!productGrid) return;
     const products = (state.bootstrap.products || []).filter(item => state.activeCategory === 'ALL' || item.category === state.activeCategory);
 
-    stopProductAuto();
-
     if (!products.length) {
       productGrid.innerHTML = `<div class="section-empty">현재 준비된 상담 분야가 없습니다. 바로 상담 신청을 남겨주시면 순차적으로 안내드립니다.</div>`;
       return;
@@ -454,8 +430,6 @@
         </article>
       `;
     }).join('');
-
-    setupProductSlider();
   }
 
   function renderReviews() {
@@ -464,7 +438,6 @@
     if (!reviews.length) {
       reviewGrid.innerHTML = `<div class="section-empty">준비 중인 후기가 곧 업데이트됩니다.</div>`;
       if (reviewDots) reviewDots.innerHTML = '';
-      stopReviewAuto();
       return;
     }
 
@@ -568,7 +541,6 @@
   function setupReviewSlider(total) {
     if (!reviewGrid) return;
     const perView = getReviewPerView();
-    const isMobile = perView === 1;
     const maxPage = Math.max(0, total - perView);
     state.reviewPage = Math.min(state.reviewPage, maxPage);
 
@@ -591,9 +563,9 @@
     next?.classList.remove('is-hidden');
     if (reviewDots) reviewDots.className = 'review-dots';
 
-    const gap = isMobile ? 0 : 22;
+    const gap = 22;
     const viewportWidth = reviewViewport ? reviewViewport.clientWidth : 0;
-    const cardWidth = isMobile ? viewportWidth : (viewportWidth - gap) / perView;
+    const cardWidth = (viewportWidth - gap) / perView;
     reviewGrid.style.transform = `translateX(-${state.reviewPage * (cardWidth + gap)}px)`;
 
     if (reviewDots) {
@@ -616,9 +588,7 @@
 
   function startReviewAuto(total) {
     stopReviewAuto();
-    if (total > getReviewPerView()) {
-      reviewAutoTimer = window.setInterval(() => moveReviews('next'), 3600);
-    }
+    if (total > getReviewPerView()) reviewAutoTimer = window.setInterval(() => moveReviews('next'), 3600);
   }
 
   function stopReviewAuto() {
@@ -626,141 +596,6 @@
       window.clearInterval(reviewAutoTimer);
       reviewAutoTimer = null;
     }
-  }
-
-  function onReviewTouchStart(event) {
-    stopReviewAuto();
-    reviewTouchStartX = event.changedTouches[0].clientX;
-    reviewTouchDeltaX = 0;
-  }
-
-  function onReviewTouchMove(event) {
-    reviewTouchDeltaX = event.changedTouches[0].clientX - reviewTouchStartX;
-  }
-
-  function onReviewTouchEnd() {
-    if (Math.abs(reviewTouchDeltaX) > 40) {
-      moveReviews(reviewTouchDeltaX > 0 ? 'prev' : 'next');
-    } else {
-      setupReviewSlider((state.bootstrap.reviews || []).length);
-    }
-  }
-
-  function setupProductSlider() {
-    stopProductAuto();
-    if (!productGrid) return;
-    if (window.innerWidth > 768) {
-      productGrid.scrollLeft = 0;
-      return;
-    }
-    startProductAuto();
-  }
-
-  function getProductCards() {
-    if (!productGrid) return [];
-    return Array.from(productGrid.querySelectorAll('.product-card'));
-  }
-
-  function getProductStep() {
-    const cards = getProductCards();
-    if (!cards.length) return 0;
-    const firstCard = cards[0];
-    const style = window.getComputedStyle(productGrid);
-    const gap = parseFloat(style.columnGap || style.gap || '0') || 0;
-    return firstCard.getBoundingClientRect().width + gap;
-  }
-
-  function getActiveProductIndex() {
-    const step = getProductStep();
-    if (!step || !productGrid) return 0;
-    return Math.round(productGrid.scrollLeft / step);
-  }
-
-  function scrollToProductIndex(index, smooth) {
-    const cards = getProductCards();
-    const step = getProductStep();
-    if (!cards.length || !step || !productGrid) return;
-    const maxIndex = Math.max(0, cards.length - 1);
-    const targetIndex = Math.max(0, Math.min(index, maxIndex));
-    productGrid.scrollTo({
-      left: targetIndex * step,
-      behavior: smooth ? 'smooth' : 'auto'
-    });
-  }
-
-  function moveProducts(direction) {
-    const cards = getProductCards();
-    if (!cards.length) return;
-    const maxIndex = Math.max(0, cards.length - 1);
-    const currentIndex = getActiveProductIndex();
-    const nextIndex = direction === 'prev'
-      ? (currentIndex <= 0 ? maxIndex : currentIndex - 1)
-      : (currentIndex >= maxIndex ? 0 : currentIndex + 1);
-    scrollToProductIndex(nextIndex, true);
-  }
-
-  function startProductAuto() {
-    stopProductAuto();
-    if (!productGrid || window.innerWidth > 768) return;
-    const cards = getProductCards();
-    if (cards.length <= 1) return;
-    productAutoTimer = window.setInterval(() => moveProducts('next'), 4200);
-  }
-
-  function stopProductAuto() {
-    if (productAutoTimer) {
-      window.clearInterval(productAutoTimer);
-      productAutoTimer = null;
-    }
-  }
-
-  function onProductTouchStart(event) {
-    stopProductAuto();
-    productTouchStartX = event.changedTouches[0].clientX;
-    productTouchDeltaX = 0;
-  }
-
-  function onProductTouchMove(event) {
-    productTouchDeltaX = event.changedTouches[0].clientX - productTouchStartX;
-  }
-
-  function onProductTouchEnd() {
-    if (window.innerWidth > 768) return;
-    if (Math.abs(productTouchDeltaX) > 40) {
-      moveProducts(productTouchDeltaX > 0 ? 'prev' : 'next');
-    }
-    window.setTimeout(startProductAuto, 1200);
-  }
-
-  function onProductScroll() {
-    if (window.innerWidth > 768) return;
-    stopProductAuto();
-    window.clearTimeout(onProductScroll._timer);
-    onProductScroll._timer = window.setTimeout(startProductAuto, 1400);
-  }
-
-  function setupContactStickyObserver() {
-    if (!stickyInquiryBar || !contactSection) return;
-
-    if (contactObserver) {
-      contactObserver.disconnect();
-      contactObserver = null;
-    }
-
-    contactObserver = new IntersectionObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      if (entry.isIntersecting) {
-        stickyInquiryBar.classList.add('is-hidden-by-contact');
-      } else {
-        stickyInquiryBar.classList.remove('is-hidden-by-contact');
-      }
-    }, {
-      root: null,
-      threshold: 0.15
-    });
-
-    contactObserver.observe(contactSection);
   }
 
   function openPrivacyPopup() {
