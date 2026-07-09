@@ -17,7 +17,7 @@
   <meta name="theme-color" content="#080b14" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="/assets/css/styles.css?v=20260709-board" />
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260709-admin-board" />
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -39,6 +39,7 @@
         <a href="#board">질문게시판</a>
         <a href="#write">질문남기기</a>
         <a href="#topics">보험분야</a>
+        <button type="button" class="admin-open-btn" data-admin-toggle>관리자</button>
       </nav>
     </div>
   </header>
@@ -74,6 +75,18 @@
         <div class="board-layout">
           <div class="board-list" id="boardList" aria-live="polite"></div>
           <aside class="board-side">
+            <div class="admin-box" id="adminBox">
+              <strong>관리자</strong>
+              <form id="adminLoginForm" class="admin-login-form">
+                <input type="password" id="adminPasswordInput" placeholder="관리자 비밀번호" autocomplete="current-password" />
+                <button type="submit">로그인</button>
+              </form>
+              <div class="admin-active" id="adminActive" hidden>
+                <p>관리자 모드 ON</p>
+                <button type="button" id="adminLogoutButton">로그아웃</button>
+              </div>
+              <p class="admin-help">로그인 후 답변 작성과 질문 삭제가 가능합니다.</p>
+            </div>
             <strong>많이 올라오는 고민</strong>
             <a href="/q/silbi-premium-increase-cancel">실비보험료가 올랐어요</a>
             <a href="/q/reduce-insurance-premium">보험료를 줄이고 싶어요</a>
@@ -136,7 +149,7 @@
   </footer>
 
   <div class="sticky-cta"><a href="#write">질문 남기기</a></div>
-  <script src="/assets/js/config.js?v=20260709-board"></script>
-  <script src="/assets/js/main.js?v=20260709-board"></script>
+  <script src="/assets/js/config.js?v=20260709-admin-board"></script>
+  <script src="/assets/js/main.js?v=20260709-admin-board"></script>
 </body>
 </html>
