@@ -18,11 +18,9 @@
       title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?',
       message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.',
       nickname: '익명',
-      age_band: '40대',
-      status: '답변 완료',
+      status: '답변완료',
       time: '방금 전',
-      answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.',
-      answeredAt: '관리자 답변'
+      answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.'
     },
     {
       id: 'seed-1006',
@@ -31,8 +29,7 @@
       title: '당뇨약 복용 중인데 보험 가입 가능한가요?',
       message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.',
       nickname: '익명',
-      age_band: '50대',
-      status: '답변 대기',
+      status: '답변대기',
       time: '3분 전'
     },
     {
@@ -42,11 +39,9 @@
       title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?',
       message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.',
       nickname: '익명',
-      age_band: '30대',
-      status: '답변 완료',
+      status: '답변완료',
       time: '8분 전',
-      answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.',
-      answeredAt: '관리자 답변'
+      answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.'
     },
     {
       id: 'seed-1004',
@@ -55,8 +50,7 @@
       title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?',
       message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.',
       nickname: '익명',
-      age_band: '30대',
-      status: '답변 대기',
+      status: '답변대기',
       time: '12분 전'
     }
   ];
@@ -87,7 +81,7 @@
         setLoginResult('', 'success');
         setAdminState(true);
       } catch (error) {
-        setLoginResult('로그인에 실패했습니다. Cloudflare 환경변수 ADMIN_PASSWORD 설정을 확인하세요.', 'error');
+        setLoginResult('로그인에 실패했습니다. 환경변수 설정을 확인하세요.', 'error');
       }
     });
   }
@@ -131,43 +125,36 @@
     if (!boardList) return;
     const posts = getAllPosts().slice(0, 30);
     boardList.innerHTML = posts.map((post) => `
-      <article class="post-card ${post.answer ? 'has-answer' : ''}" data-post-id="${escapeHtml(post.id)}">
-        <div class="post-no">NO.${escapeHtml(post.no)}</div>
-        <div class="post-main">
-          <strong>${escapeHtml(post.title)}</strong>
-          <p>${escapeHtml(post.message)}</p>
-          <div class="post-meta">
-            <span>${escapeHtml(post.category)}</span>
-            <span>${escapeHtml(post.nickname)}</span>
-            ${post.age_band ? `<span>${escapeHtml(post.age_band)}</span>` : ''}
-            <span>${escapeHtml(post.time)}</span>
+      <article class="board-item is-open" data-post-id="${escapeHtml(post.id)}">
+        <div class="board-row admin-board-row">
+          <span class="board-no">${escapeHtml(post.no)}</span>
+          <span class="board-category">${escapeHtml(post.category)}</span>
+          <span class="board-title">${escapeHtml(post.title)}</span>
+          <span class="board-status ${post.answer ? '' : 'waiting'}">${post.answer ? '답변완료' : '답변대기'}</span>
+          <span class="board-date">${escapeHtml(post.time)}</span>
+        </div>
+        <div class="board-detail">
+          <div class="detail-label">질문 내용</div>
+          <p class="detail-text">${escapeHtml(post.message)}</p>
+          <div class="answer-block">
+            <div class="detail-label">답변</div>
+            ${post.answer ? `<p class="detail-text">${escapeHtml(post.answer)}</p>` : '<p class="detail-text answer-empty">아직 답변이 등록되지 않았습니다.</p>'}
           </div>
-          ${post.answer ? renderAnswer(post) : ''}
           <div class="admin-actions">
             <button type="button" data-action="answer" data-id="${escapeHtml(post.id)}">${post.answer ? '답변 수정' : '답변 작성'}</button>
             <button type="button" class="danger" data-action="delete" data-id="${escapeHtml(post.id)}">질문 삭제</button>
           </div>
         </div>
-        <div class="post-status ${post.answer ? 'is-answered' : ''}">${escapeHtml(post.answer ? '답변 완료' : post.status)}</div>
       </article>
     `).join('');
   }
 
-  function renderAnswer(post) {
-    return `
-      <div class="answer-box">
-        <div class="answer-head"><span>관리자 답변</span><em>${escapeHtml(post.answeredAt || '답변 완료')}</em></div>
-        <p>${escapeHtml(post.answer)}</p>
-      </div>
-    `;
-  }
-
   function openAnswerEditor(postId) {
     const post = findPost(postId);
-    const article = boardList?.querySelector(`[data-post-id="${cssEscape(postId)}"] .post-main`);
-    if (!post || !article) return;
-    article.querySelector('.answer-editor')?.remove();
-    article.insertAdjacentHTML('beforeend', `
+    const detail = boardList?.querySelector(`[data-post-id="${cssEscape(postId)}"] .board-detail`);
+    if (!post || !detail) return;
+    detail.querySelector('.answer-editor')?.remove();
+    detail.insertAdjacentHTML('beforeend', `
       <div class="answer-editor">
         <textarea rows="4" placeholder="관리자 답변을 입력하세요.">${escapeHtml(post.answer || '')}</textarea>
         <div>
@@ -186,7 +173,7 @@
       alert('답변 내용을 입력해주세요.');
       return;
     }
-    upsertPost(postId, { answer, status: '답변 완료', answeredAt: '방금 전' });
+    upsertPost(postId, { answer, status: '답변완료' });
     renderBoard();
   }
 
