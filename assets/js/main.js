@@ -10,6 +10,9 @@
   const questionForm = $('#questionForm');
   const result = $('#questionResult');
   const boardList = $('#boardList');
+  const boardTabs = $('#boardTabs');
+  let activeFilter = '전체';
+  let openPostId = '';
 
   const seedPosts = [
     {
@@ -19,11 +22,9 @@
       title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?',
       message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.',
       nickname: '익명',
-      age_band: '40대',
-      status: '답변 완료',
+      status: '답변완료',
       time: '방금 전',
-      answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.',
-      answeredAt: '관리자 답변'
+      answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.'
     },
     {
       id: 'seed-1006',
@@ -32,8 +33,7 @@
       title: '당뇨약 복용 중인데 보험 가입 가능한가요?',
       message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.',
       nickname: '익명',
-      age_band: '50대',
-      status: '답변 대기',
+      status: '답변대기',
       time: '3분 전'
     },
     {
@@ -43,11 +43,9 @@
       title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?',
       message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.',
       nickname: '익명',
-      age_band: '30대',
-      status: '답변 완료',
+      status: '답변완료',
       time: '8분 전',
-      answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.',
-      answeredAt: '관리자 답변'
+      answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.'
     },
     {
       id: 'seed-1004',
@@ -56,9 +54,19 @@
       title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?',
       message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.',
       nickname: '익명',
-      age_band: '30대',
-      status: '답변 대기',
+      status: '답변대기',
       time: '12분 전'
+    },
+    {
+      id: 'seed-1003',
+      no: 1003,
+      category: '보험료',
+      title: '보험료를 줄이고 싶은데 어떤 특약부터 봐야 하나요?',
+      message: '월 보험료가 부담됩니다. 해지 말고 줄일 수 있는 방법이 있는지 궁금합니다.',
+      nickname: '익명',
+      status: '답변완료',
+      time: '20분 전',
+      answer: '보험료를 줄일 때는 실비처럼 다시 가입이 어려울 수 있는 보장부터 무조건 해지하면 안 됩니다. 중복 담보, 갱신형 특약, 우선순위가 낮은 특약을 먼저 확인하는 방식이 좋습니다.'
     }
   ];
 
@@ -67,6 +75,8 @@
   function init() {
     bindMenu();
     bindSmoothScroll();
+    bindFilters();
+    bindBoardToggle();
     fillTrackingFields();
     renderBoard();
     bindQuestionForm();
@@ -88,6 +98,27 @@
         nav?.classList.remove('is-open');
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
+    });
+  }
+
+  function bindFilters() {
+    boardTabs?.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      activeFilter = button.dataset.filter || '전체';
+      openPostId = '';
+      $$('#boardTabs button').forEach((item) => item.classList.toggle('is-active', item === button));
+      renderBoard();
+    });
+  }
+
+  function bindBoardToggle() {
+    boardList?.addEventListener('click', (event) => {
+      const row = event.target.closest('[data-post-toggle]');
+      if (!row) return;
+      const id = row.dataset.postToggle;
+      openPostId = openPostId === id ? '' : id;
+      renderBoard();
     });
   }
 
@@ -115,12 +146,14 @@
         title: String(formData.get('title') || '').trim(),
         message: String(formData.get('message') || '').trim(),
         nickname: String(formData.get('nickname') || '').trim() || '익명',
-        age_band: String(formData.get('age_band') || '').trim(),
-        status: '답변 대기',
+        status: '답변대기',
         time: '방금 전'
       };
 
       saveLocalPost(post);
+      activeFilter = '전체';
+      openPostId = post.id;
+      $$('#boardTabs button').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === '전체'));
       renderBoard();
       questionForm.reset();
       fillTrackingFields();
@@ -137,7 +170,6 @@
           apiData.append('title', post.title);
           apiData.append('message', post.message);
           apiData.append('nickname', post.nickname);
-          apiData.append('age_band', post.age_band);
           apiData.append('page_url', window.location.href);
           apiData.append('referrer', document.referrer || 'direct');
           await submitWithTimeout(config.apiUrl, apiData, config.submitTimeout || 30000);
@@ -150,33 +182,44 @@
 
   function renderBoard() {
     if (!boardList) return;
-    const posts = getAllPosts().slice(0, 12);
-    boardList.innerHTML = posts.map((post) => `
-      <article class="post-card ${post.answer ? 'has-answer' : ''}" data-post-id="${escapeHtml(post.id)}">
-        <div class="post-no">NO.${escapeHtml(post.no)}</div>
-        <div class="post-main">
-          <strong>${escapeHtml(post.title)}</strong>
-          <p>${escapeHtml(post.message)}</p>
-          <div class="post-meta">
-            <span>${escapeHtml(post.category)}</span>
-            <span>${escapeHtml(post.nickname)}</span>
-            ${post.age_band ? `<span>${escapeHtml(post.age_band)}</span>` : ''}
-            <span>${escapeHtml(post.time)}</span>
+    const posts = getFilteredPosts().slice(0, 30);
+
+    if (!posts.length) {
+      boardList.innerHTML = '<div class="board-empty">등록된 질문이 없습니다.</div>';
+      return;
+    }
+
+    boardList.innerHTML = posts.map((post) => {
+      const isOpen = openPostId === post.id;
+      const answered = Boolean(post.answer);
+      return `
+        <article class="board-item ${isOpen ? 'is-open' : ''}">
+          <button class="board-row" type="button" data-post-toggle="${escapeHtml(post.id)}" aria-expanded="${isOpen ? 'true' : 'false'}">
+            <span class="board-no">${escapeHtml(post.no)}</span>
+            <span class="board-category">${escapeHtml(post.category)}</span>
+            <span class="board-title">${escapeHtml(post.title)}</span>
+            <span class="board-status ${answered ? '' : 'waiting'}">${answered ? '답변완료' : '답변대기'}</span>
+            <span class="board-date">${escapeHtml(post.time)}</span>
+          </button>
+          <div class="board-detail">
+            <div class="detail-label">질문 내용</div>
+            <p class="detail-text">${escapeHtml(post.message)}</p>
+            <div class="answer-block">
+              <div class="detail-label">답변</div>
+              ${answered ? `<p class="detail-text">${escapeHtml(post.answer)}</p>` : '<p class="detail-text answer-empty">아직 답변이 등록되지 않았습니다.</p>'}
+            </div>
           </div>
-          ${post.answer ? renderAnswer(post) : ''}
-        </div>
-        <div class="post-status ${post.answer ? 'is-answered' : ''}">${escapeHtml(post.answer ? '답변 완료' : post.status)}</div>
-      </article>
-    `).join('');
+        </article>
+      `;
+    }).join('');
   }
 
-  function renderAnswer(post) {
-    return `
-      <div class="answer-box">
-        <div class="answer-head"><span>관리자 답변</span><em>${escapeHtml(post.answeredAt || '답변 완료')}</em></div>
-        <p>${escapeHtml(post.answer)}</p>
-      </div>
-    `;
+  function getFilteredPosts() {
+    const posts = getAllPosts();
+    if (activeFilter === '전체') return posts;
+    if (activeFilter === '보험료') return posts.filter((post) => post.category === '보험료' || post.category === '보험료 줄이기');
+    if (activeFilter === '태아보험') return posts.filter((post) => post.category === '태아보험' || post.category === '태아·어린이보험');
+    return posts.filter((post) => post.category === activeFilter);
   }
 
   function getAllPosts() {
