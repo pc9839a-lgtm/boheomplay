@@ -11,6 +11,9 @@
   const result = $('#questionResult');
   const boardList = $('#boardList');
   const boardTabs = $('#boardTabs');
+  const privateFields = $('#privateFields');
+  const privateNameInput = $('#privateNameInput');
+  const privatePhoneInput = $('#privatePhoneInput');
   let activeFilter = '전체';
   let openPostId = '';
 
@@ -77,6 +80,7 @@
     bindSmoothScroll();
     bindFilters();
     bindBoardToggle();
+    bindVisibilityToggle();
     fillTrackingFields();
     renderBoard();
     bindQuestionForm();
@@ -122,9 +126,31 @@
     });
   }
 
+  function bindVisibilityToggle() {
+    $$('input[name="visibility"]').forEach((input) => {
+      input.addEventListener('change', updatePrivateFields);
+    });
+    privatePhoneInput?.addEventListener('input', () => {
+      privatePhoneInput.value = privatePhoneInput.value.replace(/[^0-9]/g, '').slice(0, 11);
+    });
+    updatePrivateFields();
+  }
+
+  function updatePrivateFields() {
+    const isPrivate = getVisibility() === 'private';
+    if (privateFields) privateFields.hidden = !isPrivate;
+    if (privateNameInput) privateNameInput.required = isPrivate;
+    if (privatePhoneInput) privatePhoneInput.required = isPrivate;
+  }
+
+  function getVisibility() {
+    return questionForm?.querySelector('input[name="visibility"]:checked')?.value || 'public';
+  }
+
   function bindQuestionForm() {
     questionForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
+      updatePrivateFields();
 
       if (!questionForm.checkValidity()) {
         questionForm.reportValidity();
@@ -139,13 +165,25 @@
         return;
       }
 
+      const visibility = String(formData.get('visibility') || 'public');
+      const isPrivate = visibility === 'private';
+      const rawTitle = String(formData.get('title') || '').trim();
+      const rawMessage = String(formData.get('message') || '').trim();
+      const category = String(formData.get('category') || '기타');
+      const nickname = String(formData.get('nickname') || '').trim() || '익명';
+      const privateName = String(formData.get('private_name') || '').trim();
+      const privatePhone = String(formData.get('private_phone') || '').trim();
+
       const post = {
         id: 'local-' + Date.now(),
         no: getNextNo(),
-        category: String(formData.get('category') || '기타'),
-        title: String(formData.get('title') || '').trim(),
-        message: String(formData.get('message') || '').trim(),
-        nickname: String(formData.get('nickname') || '').trim() || '익명',
+        category,
+        title: isPrivate ? '비공개 질문입니다.' : rawTitle,
+        message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : rawMessage,
+        original_title: rawTitle,
+        original_message: rawMessage,
+        visibility,
+        nickname: isPrivate ? '비공개' : nickname,
         status: '답변대기',
         time: '방금 전'
       };
@@ -156,6 +194,7 @@
       $$('#boardTabs button').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === '전체'));
       renderBoard();
       questionForm.reset();
+      updatePrivateFields();
       fillTrackingFields();
       setResult('게시글이 등록되었습니다.', 'success');
       document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -166,10 +205,13 @@
           apiData.append('action', 'board_question');
           apiData.append('site_name', '보험플레이');
           apiData.append('source', '보험질문게시판');
-          apiData.append('category', post.category);
-          apiData.append('title', post.title);
-          apiData.append('message', post.message);
-          apiData.append('nickname', post.nickname);
+          apiData.append('visibility', visibility);
+          apiData.append('category', category);
+          apiData.append('title', rawTitle);
+          apiData.append('message', rawMessage);
+          apiData.append('nickname', nickname);
+          apiData.append('private_name', privateName);
+          apiData.append('private_phone', privatePhone);
           apiData.append('page_url', window.location.href);
           apiData.append('referrer', document.referrer || 'direct');
           await submitWithTimeout(config.apiUrl, apiData, config.submitTimeout || 30000);
