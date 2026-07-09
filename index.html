@@ -17,7 +17,7 @@
   <meta name="theme-color" content="#ffffff" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="/assets/css/styles.css?v=20260709-imweb-board-hero" />
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260709-private-board" />
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -85,26 +85,42 @@
 
     <section class="write-section" id="write">
       <div class="wrap write-wrap">
-        <div class="write-title">
-          <h2>질문 남기기</h2>
-          <p>개인정보나 주민번호는 적지 마세요.</p>
-        </div>
-        <form class="question-form" id="questionForm" method="POST" novalidate>
-          <div class="form-row">
-            <label><span>분류 *</span><select name="category" required><option value="">선택</option><option>실비보험</option><option>암보험</option><option>보험료</option><option>유병자보험</option><option>부모님 보험</option><option>태아보험</option><option>운전자보험</option><option>치아보험</option><option>기타</option></select></label>
-            <label><span>닉네임</span><input name="nickname" placeholder="익명 가능" /></label>
+        <div class="write-card">
+          <div class="write-title">
+            <span>WRITE</span>
+            <h2>질문 남기기</h2>
+            <p>공개 질문은 게시판에 노출됩니다. 비공개 질문은 연락처를 남겨주세요.</p>
           </div>
-          <label><span>제목 *</span><input name="title" required maxlength="80" placeholder="예: 실비보험료가 갑자기 올랐는데 유지해야 할까요?" /></label>
-          <label><span>질문 내용 *</span><textarea name="message" required rows="5" maxlength="800" placeholder="현재 상황을 짧게 남겨주세요."></textarea></label>
-          <input class="bot-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <input type="hidden" name="page_url" id="landingPageInput" />
-          <input type="hidden" name="referrer" id="referrerInput" />
-          <input type="hidden" name="utm_source" id="utmSourceInput" />
-          <input type="hidden" name="utm_medium" id="utmMediumInput" />
-          <input type="hidden" name="utm_campaign" id="utmCampaignInput" />
-          <button class="submit-button" type="submit">게시글 올리기</button>
-          <p class="form-result" id="questionResult" role="status"></p>
-        </form>
+          <form class="question-form" id="questionForm" method="POST" novalidate>
+            <div class="visibility-toggle" aria-label="공개 여부">
+              <label><input type="radio" name="visibility" value="public" checked /> <span>공개 질문</span></label>
+              <label><input type="radio" name="visibility" value="private" /> <span>비공개 질문</span></label>
+            </div>
+
+            <div class="private-fields" id="privateFields" hidden>
+              <div class="private-notice">비공개 질문은 답변 안내를 위해 이름과 연락처를 받습니다.</div>
+              <div class="form-row">
+                <label><span>이름 *</span><input name="private_name" id="privateNameInput" placeholder="이름" autocomplete="name" /></label>
+                <label><span>전화번호 *</span><input name="private_phone" id="privatePhoneInput" placeholder="숫자만 입력" inputmode="numeric" autocomplete="tel" /></label>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <label><span>분류 *</span><select name="category" required><option value="">선택</option><option>실비보험</option><option>암보험</option><option>보험료</option><option>유병자보험</option><option>부모님 보험</option><option>태아보험</option><option>운전자보험</option><option>치아보험</option><option>기타</option></select></label>
+              <label><span>닉네임</span><input name="nickname" placeholder="익명 가능" /></label>
+            </div>
+            <label><span>제목 *</span><input name="title" required maxlength="80" placeholder="예: 실비보험료가 갑자기 올랐는데 유지해야 할까요?" /></label>
+            <label><span>질문 내용 *</span><textarea name="message" required rows="5" maxlength="800" placeholder="현재 상황을 짧게 남겨주세요."></textarea></label>
+            <input class="bot-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+            <input type="hidden" name="page_url" id="landingPageInput" />
+            <input type="hidden" name="referrer" id="referrerInput" />
+            <input type="hidden" name="utm_source" id="utmSourceInput" />
+            <input type="hidden" name="utm_medium" id="utmMediumInput" />
+            <input type="hidden" name="utm_campaign" id="utmCampaignInput" />
+            <button class="submit-button" type="submit">게시글 올리기</button>
+            <p class="form-result" id="questionResult" role="status"></p>
+          </form>
+        </div>
       </div>
     </section>
   </main>
@@ -116,7 +132,7 @@
     </div>
   </footer>
 
-  <script src="/assets/js/config.js?v=20260709-imweb-board-hero"></script>
-  <script src="/assets/js/main.js?v=20260709-imweb-board-hero"></script>
+  <script src="/assets/js/config.js?v=20260709-private-board"></script>
+  <script src="/assets/js/main.js?v=20260709-private-board"></script>
 </body>
 </html>
