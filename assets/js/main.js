@@ -2,70 +2,190 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const config = window.APP_CONFIG || {};
+  const STORAGE_KEY = 'boheomplay_board_posts_v1';
+  const openedAt = Date.now();
 
   const menuButton = $('[data-menu-toggle]');
   const nav = $('[data-nav]');
-  const form = $('#contactForm');
-  const result = $('#formResult');
-  const phoneInput = $('#phoneInput');
-  const privacyModal = $('#privacyModal');
+  const questionForm = $('#questionForm');
+  const result = $('#questionResult');
+  const boardList = $('#boardList');
 
-  menuButton?.addEventListener('click', () => {
-    nav?.classList.toggle('is-open');
-    menuButton.classList.toggle('is-open');
-  });
+  const seedPosts = [
+    {
+      id: 'seed-1007',
+      no: 1007,
+      category: '실비보험',
+      title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?',
+      message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.',
+      nickname: '익명',
+      age_band: '40대',
+      status: '답변 대기',
+      time: '방금 전'
+    },
+    {
+      id: 'seed-1006',
+      no: 1006,
+      category: '유병자보험',
+      title: '당뇨약 복용 중인데 보험 가입 가능한가요?',
+      message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.',
+      nickname: '익명',
+      age_band: '50대',
+      status: '답변 대기',
+      time: '3분 전'
+    },
+    {
+      id: 'seed-1005',
+      no: 1005,
+      category: '부모님 보험',
+      title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?',
+      message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.',
+      nickname: '익명',
+      age_band: '30대',
+      status: '답변 대기',
+      time: '8분 전'
+    },
+    {
+      id: 'seed-1004',
+      no: 1004,
+      category: '암보험',
+      title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?',
+      message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.',
+      nickname: '익명',
+      age_band: '30대',
+      status: '답변 대기',
+      time: '12분 전'
+    }
+  ];
 
-  $$('a[href^="#"]').forEach((anchor) => {
-    anchor.addEventListener('click', (event) => {
-      const target = $(anchor.getAttribute('href'));
-      if (!target) return;
-      event.preventDefault();
-      nav?.classList.remove('is-open');
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  init();
+
+  function init() {
+    bindMenu();
+    bindSmoothScroll();
+    fillTrackingFields();
+    renderBoard();
+    bindQuestionForm();
+  }
+
+  function bindMenu() {
+    menuButton?.addEventListener('click', () => {
+      nav?.classList.toggle('is-open');
+      menuButton.classList.toggle('is-open');
     });
-  });
+  }
 
-  phoneInput?.addEventListener('input', () => {
-    phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '').slice(0, 11);
-  });
+  function bindSmoothScroll() {
+    $$('a[href^="#"]').forEach((anchor) => {
+      anchor.addEventListener('click', (event) => {
+        const target = $(anchor.getAttribute('href'));
+        if (!target) return;
+        event.preventDefault();
+        nav?.classList.remove('is-open');
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
 
-  $$('[data-privacy-open]').forEach((button) => button.addEventListener('click', openPrivacy));
-  $$('[data-privacy-close]').forEach((button) => button.addEventListener('click', closePrivacy));
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') closePrivacy();
-  });
+  function bindQuestionForm() {
+    questionForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
 
-  fillTrackingFields();
-  prefillTopicFromUrl();
+      if (!questionForm.checkValidity()) {
+        questionForm.reportValidity();
+        return;
+      }
 
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
+      const formData = new FormData(questionForm);
+      if ((formData.get('website') || '').trim()) return;
 
-    const submitButton = form.querySelector('button[type="submit"]');
-    const formData = new FormData(form);
-    formData.append('action', 'lead');
-    formData.append('site_name', '보험플레이');
+      if (Date.now() - openedAt < 1200) {
+        setResult('잠시 후 다시 등록해주세요.', 'error');
+        return;
+      }
 
-    setResult('접수 중입니다. 잠시만 기다려주세요.', 'pending');
-    if (submitButton) submitButton.disabled = true;
+      const post = {
+        id: 'local-' + Date.now(),
+        no: getNextNo(),
+        category: String(formData.get('category') || '기타'),
+        title: String(formData.get('title') || '').trim(),
+        message: String(formData.get('message') || '').trim(),
+        nickname: String(formData.get('nickname') || '').trim() || '익명',
+        age_band: String(formData.get('age_band') || '').trim(),
+        status: '등록 완료',
+        time: '방금 전'
+      };
 
-    try {
-      if (!config.apiUrl) throw new Error('상담 접수 URL이 설정되지 않았습니다.');
-      await submitWithTimeout(config.apiUrl, formData, config.submitTimeout || 30000);
-      form.reset();
+      saveLocalPost(post);
+      renderBoard();
+      questionForm.reset();
       fillTrackingFields();
-      setResult('상담 신청이 접수되었습니다. 확인 후 순차적으로 연락드리겠습니다.', 'success');
+      setResult('게시글이 등록되었습니다.', 'success');
+      document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      try {
+        if (config.apiUrl) {
+          const apiData = new FormData();
+          apiData.append('action', 'board_question');
+          apiData.append('site_name', '보험플레이');
+          apiData.append('source', '보험질문게시판');
+          apiData.append('category', post.category);
+          apiData.append('title', post.title);
+          apiData.append('message', post.message);
+          apiData.append('nickname', post.nickname);
+          apiData.append('age_band', post.age_band);
+          apiData.append('page_url', window.location.href);
+          apiData.append('referrer', document.referrer || 'direct');
+          await submitWithTimeout(config.apiUrl, apiData, config.submitTimeout || 30000);
+        }
+      } catch (error) {
+        console.warn('[boheomplay] board post remote save failed', error);
+      }
+    });
+  }
+
+  function renderBoard() {
+    if (!boardList) return;
+    const posts = getLocalPosts().concat(seedPosts).slice(0, 12);
+    boardList.innerHTML = posts.map((post) => `
+      <article class="post-card">
+        <div class="post-no">NO.${escapeHtml(post.no)}</div>
+        <div class="post-main">
+          <strong>${escapeHtml(post.title)}</strong>
+          <p>${escapeHtml(post.message)}</p>
+          <div class="post-meta">
+            <span>${escapeHtml(post.category)}</span>
+            <span>${escapeHtml(post.nickname)}</span>
+            ${post.age_band ? `<span>${escapeHtml(post.age_band)}</span>` : ''}
+            <span>${escapeHtml(post.time)}</span>
+          </div>
+        </div>
+        <div class="post-status">${escapeHtml(post.status)}</div>
+      </article>
+    `).join('');
+  }
+
+  function getLocalPosts() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error('[boheomplay] form submit failed', error);
-      setResult('접수 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
-    } finally {
-      if (submitButton) submitButton.disabled = false;
+      return [];
     }
-  });
+  }
+
+  function saveLocalPost(post) {
+    const posts = getLocalPosts();
+    posts.unshift(post);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts.slice(0, 20)));
+  }
+
+  function getNextNo() {
+    const localPosts = getLocalPosts();
+    const maxLocalNo = localPosts.reduce((max, post) => Math.max(max, Number(post.no) || 0), 0);
+    return Math.max(1008, maxLocalNo + 1);
+  }
 
   function submitWithTimeout(url, body, timeout) {
     const controller = new AbortController();
@@ -83,17 +203,6 @@
     setValue('#utmCampaignInput', params.get('utm_campaign') || '');
   }
 
-  function prefillTopicFromUrl() {
-    const select = $('#topicSelect');
-    if (!select) return;
-    const params = new URLSearchParams(window.location.search);
-    const topic = params.get('topic');
-    if (!topic) return;
-    Array.from(select.options).forEach((option) => {
-      if (option.value === topic || option.textContent === topic) select.value = option.value || option.textContent;
-    });
-  }
-
   function setValue(selector, value) {
     const input = $(selector);
     if (input) input.value = value;
@@ -105,13 +214,12 @@
     result.dataset.type = type;
   }
 
-  function openPrivacy() {
-    privacyModal?.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('modal-open');
-  }
-
-  function closePrivacy() {
-    privacyModal?.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('modal-open');
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"]/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[char]));
   }
 })();
