@@ -4,20 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>보험플레이 | 보험 질문 게시판</title>
-  <meta name="description" content="보험료, 실비보험, 암보험, 유병자보험, 태아보험, 부모님 보험까지 궁금한 보험 질문을 남기고 관련 질문을 확인하는 보험플레이입니다." />
+  <meta name="description" content="실비보험, 암보험, 유병자보험, 부모님 보험 등 보험 질문을 게시판 형식으로 확인하고 남길 수 있는 보험플레이입니다." />
   <meta name="robots" content="index,follow,max-image-preview:large" />
   <link rel="canonical" href="https://boheomplay.pages.dev/" />
   <meta property="og:locale" content="ko_KR" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="보험플레이" />
   <meta property="og:title" content="보험플레이 | 보험 질문 게시판" />
-  <meta property="og:description" content="보험 질문을 남기고 비슷한 고민을 먼저 확인해보세요." />
+  <meta property="og:description" content="보험 질문을 게시판에서 확인하고 남겨보세요." />
   <meta property="og:url" content="https://boheomplay.pages.dev/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="theme-color" content="#080b14" />
+  <meta name="theme-color" content="#ffffff" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="/assets/css/styles.css?v=20260709-public-board" />
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260709-imweb-board" />
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -31,112 +31,87 @@
   </script>
 </head>
 <body>
-  <header class="site-header dark-header">
+  <header class="site-header">
     <div class="wrap header-inner">
-      <a class="brand" href="/" aria-label="보험플레이 홈"><span class="brand-mark">B</span><strong>보험플레이</strong></a>
+      <a class="brand" href="/" aria-label="보험플레이 홈">보험플레이</a>
       <button class="menu-btn" type="button" aria-label="메뉴 열기" data-menu-toggle><span></span><span></span><span></span></button>
       <nav class="nav" data-nav>
         <a href="#board">질문게시판</a>
         <a href="#write">질문남기기</a>
-        <a href="#topics">보험분야</a>
       </nav>
     </div>
   </header>
 
   <main>
-    <section class="award-hero">
-      <div class="hero-glow hero-glow-a"></div>
-      <div class="hero-glow hero-glow-b"></div>
-      <div class="wrap hero-board-wrap">
-        <span class="hero-label">INSURANCE QUESTION BOARD</span>
-        <h1>보험 질문,<br />여기에 먼저 남기세요</h1>
-        <p>실비 · 암보험 · 유병자보험 · 부모님 보험까지<br />궁금한 내용을 게시글처럼 남겨보세요.</p>
-        <div class="hero-actions center-actions">
-          <a class="btn btn-primary" href="#write">질문 남기기</a>
-          <a class="btn btn-ghost" href="#board">게시글 보기</a>
-        </div>
+    <section class="board-intro">
+      <div class="wrap board-intro-inner">
+        <h1>보험 질문 게시판</h1>
+        <p>실비보험, 암보험, 유병자보험, 부모님 보험까지 궁금한 내용을 질문으로 남겨보세요.</p>
       </div>
     </section>
 
-    <section class="ticker-band" aria-label="보험 질문 키워드">
-      <div class="ticker-track">
-        <span>실비보험</span><span>암보험</span><span>보험료 줄이기</span><span>유병자보험</span><span>태아보험</span><span>부모님 보험</span><span>운전자보험</span><span>치아보험</span>
-        <span>실비보험</span><span>암보험</span><span>보험료 줄이기</span><span>유병자보험</span><span>태아보험</span><span>부모님 보험</span><span>운전자보험</span><span>치아보험</span>
-      </div>
-    </section>
-
-    <section class="section board-section" id="board">
+    <section class="board-section" id="board">
       <div class="wrap">
-        <div class="section-title-block">
-          <span>QUESTION BOARD</span>
-          <h2>최근 보험 질문</h2>
+        <div class="board-toolbar">
+          <div class="board-tabs" id="boardTabs" aria-label="보험 질문 분류">
+            <button type="button" class="is-active" data-filter="전체">전체</button>
+            <button type="button" data-filter="실비보험">실비보험</button>
+            <button type="button" data-filter="암보험">암보험</button>
+            <button type="button" data-filter="보험료">보험료</button>
+            <button type="button" data-filter="유병자보험">유병자보험</button>
+            <button type="button" data-filter="부모님 보험">부모님 보험</button>
+            <button type="button" data-filter="태아보험">태아보험</button>
+          </div>
+          <a class="write-button" href="#write">질문 남기기</a>
         </div>
-        <div class="board-layout">
-          <div class="board-list" id="boardList" aria-live="polite"></div>
-          <aside class="board-side">
-            <strong>많이 올라오는 고민</strong>
-            <a href="/q/silbi-premium-increase-cancel">실비보험료가 올랐어요</a>
-            <a href="/q/reduce-insurance-premium">보험료를 줄이고 싶어요</a>
-            <a href="/q/diabetes-insurance-available">병력이 있어 가입이 걱정돼요</a>
-            <a href="/q/parents-insurance-review-order">부모님 보험을 봐야 해요</a>
-          </aside>
+
+        <div class="board-table" aria-live="polite">
+          <div class="board-head" aria-hidden="true">
+            <span>번호</span>
+            <span>분류</span>
+            <span>제목</span>
+            <span>상태</span>
+            <span>작성일</span>
+          </div>
+          <div class="board-list" id="boardList"></div>
         </div>
       </div>
     </section>
 
-    <section class="section write-section" id="write">
+    <section class="write-section" id="write">
       <div class="wrap write-wrap">
-        <div class="section-title-block center-title-block">
-          <span>WRITE QUESTION</span>
-          <h2>보험 질문 남기기</h2>
+        <div class="write-title">
+          <h2>질문 남기기</h2>
+          <p>개인정보나 주민번호는 적지 마세요.</p>
         </div>
         <form class="question-form" id="questionForm" method="POST" novalidate>
           <div class="form-row">
+            <label><span>분류 *</span><select name="category" required><option value="">선택</option><option>실비보험</option><option>암보험</option><option>보험료</option><option>유병자보험</option><option>부모님 보험</option><option>태아보험</option><option>운전자보험</option><option>치아보험</option><option>기타</option></select></label>
             <label><span>닉네임</span><input name="nickname" placeholder="익명 가능" /></label>
-            <label><span>연령대</span><select name="age_band"><option value="">선택</option><option>20대</option><option>30대</option><option>40대</option><option>50대</option><option>60대 이상</option></select></label>
           </div>
-          <label><span>보험 분야 *</span><select name="category" required><option value="">선택</option><option>실비보험</option><option>암보험</option><option>보험료 줄이기</option><option>유병자보험</option><option>태아·어린이보험</option><option>부모님 보험</option><option>운전자보험</option><option>치아보험</option><option>기타</option></select></label>
           <label><span>제목 *</span><input name="title" required maxlength="80" placeholder="예: 실비보험료가 갑자기 올랐는데 유지해야 할까요?" /></label>
-          <label><span>질문 내용 *</span><textarea name="message" required rows="5" maxlength="800" placeholder="현재 상황을 짧게 남겨주세요. 개인정보나 주민번호 등은 적지 마세요."></textarea></label>
+          <label><span>질문 내용 *</span><textarea name="message" required rows="5" maxlength="800" placeholder="현재 상황을 짧게 남겨주세요."></textarea></label>
           <input class="bot-field" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <input type="hidden" name="page_url" id="landingPageInput" />
           <input type="hidden" name="referrer" id="referrerInput" />
           <input type="hidden" name="utm_source" id="utmSourceInput" />
           <input type="hidden" name="utm_medium" id="utmMediumInput" />
           <input type="hidden" name="utm_campaign" id="utmCampaignInput" />
-          <button class="btn btn-primary form-submit" type="submit">게시글 올리기</button>
+          <button class="submit-button" type="submit">게시글 올리기</button>
           <p class="form-result" id="questionResult" role="status"></p>
         </form>
       </div>
     </section>
-
-    <section class="section topics-section" id="topics">
-      <div class="wrap">
-        <div class="section-title-block center-title-block">
-          <span>INSURANCE TOPICS</span>
-          <h2>보험 분야별 질문 보기</h2>
-        </div>
-        <div class="topic-grid">
-          <a href="/insurance/silbi"><em>01</em><strong>실비보험</strong></a>
-          <a href="/insurance/cancer"><em>02</em><strong>암보험</strong></a>
-          <a href="/insurance/remodeling"><em>03</em><strong>보험료 줄이기</strong></a>
-          <a href="/insurance/chronic"><em>04</em><strong>유병자보험</strong></a>
-          <a href="/insurance/baby-child"><em>05</em><strong>태아·어린이보험</strong></a>
-          <a href="/insurance/parents-care"><em>06</em><strong>부모님 보험</strong></a>
-        </div>
-      </div>
-    </section>
   </main>
 
-  <footer class="footer board-footer">
-    <div class="wrap footer-grid">
-      <div><strong>WAYZI(보험플레이)</strong><p>대표 김도윤 · 사업자번호 538-42-01450</p><p>게시글 내용은 일반적인 보험 질문 접수 목적이며, 보험료와 가입 가능 여부는 개인 조건에 따라 달라질 수 있습니다.</p></div>
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p><strong>WAYZI(보험플레이)</strong> · 대표 김도윤 · 사업자번호 538-42-01450</p>
       <nav><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></nav>
     </div>
   </footer>
 
-  <div class="sticky-cta"><a href="#write">질문 남기기</a></div>
-  <script src="/assets/js/config.js?v=20260709-public-board"></script>
-  <script src="/assets/js/main.js?v=20260709-public-board"></script>
+  <script src="/assets/js/config.js?v=20260709-imweb-board"></script>
+  <script src="/assets/js/main.js?v=20260709-imweb-board"></script>
 </body>
 </html>
