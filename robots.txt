@@ -1,4 +1,8 @@
 User-agent: *
+Disallow: /admin/
+Disallow: /api/admin-login
+Disallow: /api/admin-check
+Disallow: /api/admin-logout
 Allow: /
 
 Sitemap: https://boheomplay.pages.dev/sitemap.xml
