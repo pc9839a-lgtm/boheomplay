@@ -27,6 +27,7 @@
       nickname: '익명',
       status: '답변완료',
       time: '방금 전',
+      href: '/q/silbi-premium-increase-cancel',
       answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.'
     },
     {
@@ -37,7 +38,8 @@
       message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.',
       nickname: '익명',
       status: '답변대기',
-      time: '3분 전'
+      time: '3분 전',
+      href: '/q/diabetes-insurance-available'
     },
     {
       id: 'seed-1005',
@@ -48,6 +50,7 @@
       nickname: '익명',
       status: '답변완료',
       time: '8분 전',
+      href: '/q/parents-insurance-review-order',
       answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.'
     },
     {
@@ -58,7 +61,8 @@
       message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.',
       nickname: '익명',
       status: '답변대기',
-      time: '12분 전'
+      time: '12분 전',
+      href: '/q/cancer-insurance-30s-needed'
     },
     {
       id: 'seed-1003',
@@ -69,6 +73,7 @@
       nickname: '익명',
       status: '답변완료',
       time: '20분 전',
+      href: '/q/reduce-insurance-premium',
       answer: '보험료를 줄일 때는 실비처럼 다시 가입이 어려울 수 있는 보장부터 무조건 해지하면 안 됩니다. 중복 담보, 갱신형 특약, 우선순위가 낮은 특약을 먼저 확인하는 방식이 좋습니다.'
     }
   ];
@@ -232,17 +237,27 @@
     }
 
     boardList.innerHTML = posts.map((post) => {
-      const isOpen = openPostId === post.id;
       const answered = Boolean(post.answer);
+      const rowContent = `
+        <span class="board-no">${escapeHtml(post.no)}</span>
+        <span class="board-category">${escapeHtml(post.category)}</span>
+        <span class="board-title">${escapeHtml(post.title)}</span>
+        <span class="board-status ${answered ? '' : 'waiting'}">${answered ? '답변완료' : '답변대기'}</span>
+        <span class="board-date">${escapeHtml(post.time)}</span>
+      `;
+
+      if (post.href) {
+        return `
+          <article class="board-item">
+            <a class="board-row" href="${escapeHtml(post.href)}">${rowContent}</a>
+          </article>
+        `;
+      }
+
+      const isOpen = openPostId === post.id;
       return `
         <article class="board-item ${isOpen ? 'is-open' : ''}">
-          <button class="board-row" type="button" data-post-toggle="${escapeHtml(post.id)}" aria-expanded="${isOpen ? 'true' : 'false'}">
-            <span class="board-no">${escapeHtml(post.no)}</span>
-            <span class="board-category">${escapeHtml(post.category)}</span>
-            <span class="board-title">${escapeHtml(post.title)}</span>
-            <span class="board-status ${answered ? '' : 'waiting'}">${answered ? '답변완료' : '답변대기'}</span>
-            <span class="board-date">${escapeHtml(post.time)}</span>
-          </button>
+          <button class="board-row" type="button" data-post-toggle="${escapeHtml(post.id)}" aria-expanded="${isOpen ? 'true' : 'false'}">${rowContent}</button>
           <div class="board-detail">
             <div class="detail-label">질문 내용</div>
             <p class="detail-text">${escapeHtml(post.message)}</p>
