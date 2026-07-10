@@ -1,8 +1,10 @@
 const SITE_URL = 'https://boheomplay.pagero.kr';
-const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const OG_IMAGE = `${SITE_URL}/og-image`;
 
 function injectSeo(html) {
-  let output = html.replaceAll('https://boheomplay.pages.dev', SITE_URL);
+  let output = html
+    .replaceAll('https://boheomplay.pages.dev', SITE_URL)
+    .replaceAll(`${SITE_URL}/og-image.jpg`, OG_IMAGE);
 
   if (!output.includes('property="og:image"')) {
     const tags = `
