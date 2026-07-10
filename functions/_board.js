@@ -40,11 +40,11 @@ export function html(html, status = 200) {
 }
 
 export function esc(value = '') {
-  return String(value).replace(/[&<>\"]/g, (char) => ({
+  return String(value).replace(/[&<>"]/g, (char) => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
-    '\"': '&quot;'
+    '"': '&quot;'
   }[char]));
 }
 
@@ -95,6 +95,15 @@ function displayTime(createdAt) {
   if (hour < 24) return `${hour}시간 전`;
   const date = new Date(createdAt);
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function displayDateTime(value) {
+  if (!value) return '방금 전';
+  return displayTime(value);
+}
+
+function lineBreaks(value = '') {
+  return esc(value).replace(/\n/g, '<br/>');
 }
 
 function publicPost(post) {
@@ -217,6 +226,7 @@ export function renderBoardPost(post) {
   const description = `${post.message}`.replace(/\s+/g, ' ').slice(0, 150);
   const title = `${post.title} | ${SITE.name}`;
   const hasAnswer = Boolean(post.answer);
+  const statusText = post.answer ? '답변완료' : '답변대기';
   const schema = {
     '@context': 'https://schema.org',
     '@type': hasAnswer ? 'QAPage' : 'Article',
@@ -241,6 +251,23 @@ export function renderBoardPost(post) {
   };
 
   const schemaClean = JSON.stringify(schema, (key, value) => value === undefined ? undefined : value);
+  const answerHtml = hasAnswer ? `
+    <section class="qa-answer-thread">
+      <div class="advisor-avatar">B</div>
+      <article class="advisor-answer-card">
+        <div class="answer-meta"><strong>보험플레이 답변</strong><span>${esc(displayDateTime(post.answeredAt || post.updatedAt))}</span></div>
+        <div class="answer-body">${lineBreaks(post.answer)}</div>
+      </article>
+    </section>
+  ` : `
+    <section class="qa-answer-thread">
+      <div class="advisor-avatar">B</div>
+      <article class="advisor-answer-card empty-answer">
+        <div class="answer-meta"><strong>보험플레이 답변</strong><span>${esc(statusText)}</span></div>
+        <div class="answer-body">아직 답변이 등록되지 않았습니다.</div>
+      </article>
+    </section>
+  `;
 
-  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${esc(title)}</title><meta name="description" content="${esc(description)}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${canonical}"/><meta property="og:locale" content="ko_KR"/><meta property="og:type" content="article"/><meta property="og:site_name" content="${esc(SITE.name)}"/><meta property="og:title" content="${esc(title)}"/><meta property="og:description" content="${esc(description)}"/><meta property="og:url" content="${canonical}"/><link rel="preconnect" href="https://cdn.jsdelivr.net"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"/><link rel="stylesheet" href="/assets/css/styles.css?v=20260709-private-board-v2"/><script type="application/ld+json">${schemaClean}</script></head><body><header class="site-header"><div class="wrap header-inner"><a class="brand" href="/">${esc(SITE.name)}</a><nav class="nav"><a href="/#board">질문게시판</a><a href="/#write">질문남기기</a></nav></div></header><main><section class="content-hero"><div class="wrap"><div class="breadcrumb"><a href="/">홈</a> / <a href="/#board">질문게시판</a> / ${esc(post.category)}</div><h1>${esc(post.title)}</h1><p>${esc(description)}</p><div class="pill-row"><span>${esc(post.category)}</span><span>${esc(post.answer ? '답변완료' : '답변대기')}</span><span>${esc(displayTime(post.createdAt))}</span></div></div></section><div class="wrap content-layout"><article class="article-card"><h2>질문 내용</h2><p>${esc(post.message).replace(/\n/g, '<br/>')}</p><h2>답변</h2>${hasAnswer ? `<p>${esc(post.answer).replace(/\n/g, '<br/>')}</p>` : '<p>아직 답변이 등록되지 않았습니다.</p>'}<div class="notice">본 게시글은 보험플레이 질문 게시판에 등록된 내용입니다. 보험료와 가입 가능 여부는 개인 조건에 따라 달라질 수 있습니다.</div></article><aside class="side-card"><h3>다른 보험 질문 보기</h3><p>비슷한 질문을 더 확인하거나 새 질문을 남겨보세요.</p><a class="btn" href="/#board">질문게시판으로 이동</a><a class="btn" href="/#write" style="margin-top:10px;background:#fff;color:#111">질문 남기기</a></aside></div></main><footer class="footer"><div class="wrap footer-inner"><p><strong>${esc(SITE.company)}</strong> · 대표 ${esc(SITE.owner)} · 사업자번호 ${esc(SITE.businessNumber)}</p><nav><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></nav></div></footer></body></html>`;
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${esc(title)}</title><meta name="description" content="${esc(description)}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${canonical}"/><meta property="og:locale" content="ko_KR"/><meta property="og:type" content="article"/><meta property="og:site_name" content="${esc(SITE.name)}"/><meta property="og:title" content="${esc(title)}"/><meta property="og:description" content="${esc(description)}"/><meta property="og:url" content="${canonical}"/><link rel="preconnect" href="https://cdn.jsdelivr.net"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"/><link rel="stylesheet" href="/assets/css/styles.css?v=20260709-qa-separated"/><style>.qa-page{background:#fff}.qa-wrap{max-width:880px;margin:0 auto;padding:64px 20px 90px}.qa-breadcrumb{font-size:13px;color:#777;margin-bottom:36px}.qa-breadcrumb a{text-decoration:underline;text-underline-offset:4px}.qa-question-card{border-bottom:1px solid #e5e5e5;padding-bottom:30px}.qa-question-head{display:flex;gap:12px;align-items:center;margin-bottom:22px;color:#777;font-size:14px}.qa-question-head span{display:inline-flex}.qa-question-card h1{margin:0 0 28px;font-size:28px;line-height:1.45;letter-spacing:-.04em}.question-body{font-size:17px;line-height:2;color:#222;white-space:normal}.post-action-row{display:flex;justify-content:space-between;align-items:center;margin-top:34px;color:#111}.post-actions-left{display:flex;gap:16px;align-items:center;font-size:16px}.post-actions-right{display:flex;gap:18px;align-items:center;font-size:18px}.qa-answer-thread{display:grid;grid-template-columns:42px minmax(0,1fr);gap:16px;margin-top:38px}.advisor-avatar{width:34px;height:34px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;margin-top:3px}.advisor-answer-card{padding:0 0 0 0}.answer-meta{display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:14px}.answer-meta strong{font-size:14px}.answer-meta span{color:#888}.answer-body{font-size:16px;line-height:1.95;color:#222;white-space:normal}.empty-answer .answer-body{color:#777}.qa-side-links{margin-top:48px;padding-top:24px;border-top:1px solid #e5e5e5;display:flex;gap:10px;flex-wrap:wrap}.qa-side-links a{border:1px solid #111;padding:11px 14px;font-size:14px;font-weight:800}.qa-side-links a:first-child{background:#111;color:#fff}@media(max-width:640px){.qa-wrap{padding:42px 18px 70px}.qa-question-card h1{font-size:24px}.question-body{font-size:16px}.qa-answer-thread{grid-template-columns:34px minmax(0,1fr);gap:12px}.post-action-row{align-items:flex-start;gap:18px}.qa-side-links{display:grid}}</style><script type="application/ld+json">${schemaClean}</script></head><body><header class="site-header"><div class="wrap header-inner"><a class="brand" href="/">${esc(SITE.name)}</a><nav class="nav"><a href="/#board">질문게시판</a><a href="/#write">질문남기기</a></nav></div></header><main class="qa-page"><div class="qa-wrap"><div class="qa-breadcrumb"><a href="/">홈</a> / <a href="/#board">질문게시판</a> / ${esc(post.category)}</div><section class="qa-question-card"><div class="qa-question-head"><span>${esc(post.category)}</span><span>·</span><span>${esc(post.nickname || '익명')}</span><span>·</span><span>${esc(displayTime(post.createdAt))}</span><span>·</span><span>${esc(statusText)}</span></div><h1>${esc(post.title)}</h1><div class="question-body">${lineBreaks(post.message)}</div><div class="post-action-row"><div class="post-actions-left"><span>♡ 0</span><span>💬 ${hasAnswer ? '1' : '0'}</span></div><div class="post-actions-right"><span>⌯</span><span>□</span></div></div></section>${answerHtml}<div class="qa-side-links"><a href="/#board">질문게시판으로 이동</a><a href="/#write">질문 남기기</a></div></div></main><footer class="footer"><div class="wrap footer-inner"><p><strong>${esc(SITE.company)}</strong> · 대표 ${esc(SITE.owner)} · 사업자번호 ${esc(SITE.businessNumber)}</p><nav><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></nav></div></footer></body></html>`;
 }
