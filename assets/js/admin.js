@@ -1,6 +1,5 @@
 (function () {
   const $ = (selector, root = document) => root.querySelector(selector);
-  const STORAGE_KEY = 'boheomplay_board_posts_v2';
 
   const gate = $('#adminGate');
   const panel = $('#adminPanel');
@@ -9,51 +8,7 @@
   const loginResult = $('#adminLoginResult');
   const logoutButton = $('#adminLogoutButton');
   const boardList = $('#adminBoardList');
-
-  const seedPosts = [
-    {
-      id: 'seed-1007',
-      no: 1007,
-      category: '실비보험',
-      title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?',
-      message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '방금 전',
-      answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.'
-    },
-    {
-      id: 'seed-1006',
-      no: 1006,
-      category: '유병자보험',
-      title: '당뇨약 복용 중인데 보험 가입 가능한가요?',
-      message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.',
-      nickname: '익명',
-      status: '답변대기',
-      time: '3분 전'
-    },
-    {
-      id: 'seed-1005',
-      no: 1005,
-      category: '부모님 보험',
-      title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?',
-      message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '8분 전',
-      answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.'
-    },
-    {
-      id: 'seed-1004',
-      no: 1004,
-      category: '암보험',
-      title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?',
-      message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.',
-      nickname: '익명',
-      status: '답변대기',
-      time: '12분 전'
-    }
-  ];
+  let posts = [];
 
   init();
 
@@ -97,12 +52,12 @@
     boardList?.addEventListener('click', (event) => {
       const button = event.target.closest('[data-action]');
       if (!button) return;
-      const postId = button.dataset.id;
+      const slug = button.dataset.id;
       const action = button.dataset.action;
-      if (action === 'delete') deletePost(postId);
-      if (action === 'answer') openAnswerEditor(postId);
+      if (action === 'delete') deletePost(slug);
+      if (action === 'answer') openAnswerEditor(slug);
       if (action === 'cancel-answer') renderBoard();
-      if (action === 'save-answer') saveAnswer(postId);
+      if (action === 'save-answer') saveAnswer(slug);
     });
   }
 
@@ -115,123 +70,121 @@
     }
   }
 
-  function setAdminState(isLoggedIn) {
+  async function setAdminState(isLoggedIn) {
     if (gate) gate.hidden = isLoggedIn;
     if (panel) panel.hidden = !isLoggedIn;
-    if (isLoggedIn) renderBoard();
+    if (isLoggedIn) await loadPosts();
+  }
+
+  async function loadPosts() {
+    if (!boardList) return;
+    boardList.innerHTML = '<div class="board-empty">질문을 불러오는 중입니다.</div>';
+    try {
+      const response = await fetch('/api/admin-posts', { method: 'GET' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || '질문 목록을 불러오지 못했습니다.');
+      posts = data.posts || [];
+      renderBoard();
+    } catch (error) {
+      boardList.innerHTML = `<div class="board-empty">${escapeHtml(error.message)}</div>`;
+    }
   }
 
   function renderBoard() {
     if (!boardList) return;
-    const posts = getAllPosts().slice(0, 30);
-    boardList.innerHTML = posts.map((post) => `
-      <article class="board-item is-open" data-post-id="${escapeHtml(post.id)}">
-        <div class="board-row admin-board-row">
-          <span class="board-no">${escapeHtml(post.no)}</span>
-          <span class="board-category">${escapeHtml(post.category)}</span>
-          <span class="board-title">${escapeHtml(post.title)}</span>
-          <span class="board-status ${post.answer ? '' : 'waiting'}">${post.answer ? '답변완료' : '답변대기'}</span>
-          <span class="board-date">${escapeHtml(post.time)}</span>
-        </div>
-        <div class="board-detail">
-          <div class="detail-label">질문 내용</div>
-          <p class="detail-text">${escapeHtml(post.message)}</p>
-          <div class="answer-block">
-            <div class="detail-label">답변</div>
-            ${post.answer ? `<p class="detail-text">${escapeHtml(post.answer)}</p>` : '<p class="detail-text answer-empty">아직 답변이 등록되지 않았습니다.</p>'}
+    if (!posts.length) {
+      boardList.innerHTML = '<div class="board-empty">등록된 질문이 없습니다.</div>';
+      return;
+    }
+
+    boardList.innerHTML = posts.map((post) => {
+      const isPrivate = post.visibility === 'private';
+      const title = isPrivate ? `[비공개] ${post.title}` : post.title;
+      const contact = isPrivate ? `<div class="detail-label">연락처</div><p class="detail-text">${escapeHtml(post.privateName || '')} · ${escapeHtml(post.privatePhone || '')}</p>` : '';
+      return `
+        <article class="board-item is-open" data-post-id="${escapeHtml(post.slug)}">
+          <div class="board-row admin-board-row">
+            <span class="board-no">${escapeHtml(post.no)}</span>
+            <span class="board-category">${escapeHtml(post.category)}</span>
+            <span class="board-title">${escapeHtml(title)}</span>
+            <span class="board-status ${post.answer ? '' : 'waiting'}">${post.answer ? '답변완료' : '답변대기'}</span>
+            <span class="board-date">${escapeHtml(post.time)}</span>
           </div>
-          <div class="admin-actions">
-            <button type="button" data-action="answer" data-id="${escapeHtml(post.id)}">${post.answer ? '답변 수정' : '답변 작성'}</button>
-            <button type="button" class="danger" data-action="delete" data-id="${escapeHtml(post.id)}">질문 삭제</button>
+          <div class="board-detail">
+            ${post.href ? `<p class="detail-text"><a href="${escapeHtml(post.href)}" target="_blank" rel="noopener">공개 게시글 보기</a></p>` : ''}
+            ${contact}
+            <div class="detail-label">질문 내용</div>
+            <p class="detail-text">${escapeHtml(post.message)}</p>
+            <div class="answer-block">
+              <div class="detail-label">답변</div>
+              ${post.answer ? `<p class="detail-text">${escapeHtml(post.answer)}</p>` : '<p class="detail-text answer-empty">아직 답변이 등록되지 않았습니다.</p>'}
+            </div>
+            <div class="admin-actions">
+              <button type="button" data-action="answer" data-id="${escapeHtml(post.slug)}">${post.answer ? '답변 수정' : '답변 작성'}</button>
+              <button type="button" class="danger" data-action="delete" data-id="${escapeHtml(post.slug)}">질문 삭제</button>
+            </div>
           </div>
-        </div>
-      </article>
-    `).join('');
+        </article>
+      `;
+    }).join('');
   }
 
-  function openAnswerEditor(postId) {
-    const post = findPost(postId);
-    const detail = boardList?.querySelector(`[data-post-id="${cssEscape(postId)}"] .board-detail`);
+  function openAnswerEditor(slug) {
+    const post = findPost(slug);
+    const detail = boardList?.querySelector(`[data-post-id="${cssEscape(slug)}"] .board-detail`);
     if (!post || !detail) return;
     detail.querySelector('.answer-editor')?.remove();
     detail.insertAdjacentHTML('beforeend', `
       <div class="answer-editor">
         <textarea rows="4" placeholder="관리자 답변을 입력하세요.">${escapeHtml(post.answer || '')}</textarea>
         <div>
-          <button type="button" data-action="save-answer" data-id="${escapeHtml(post.id)}">답변 저장</button>
-          <button type="button" data-action="cancel-answer" data-id="${escapeHtml(post.id)}">취소</button>
+          <button type="button" data-action="save-answer" data-id="${escapeHtml(post.slug)}">답변 저장</button>
+          <button type="button" data-action="cancel-answer" data-id="${escapeHtml(post.slug)}">취소</button>
         </div>
       </div>
     `);
   }
 
-  function saveAnswer(postId) {
-    const article = boardList?.querySelector(`[data-post-id="${cssEscape(postId)}"]`);
+  async function saveAnswer(slug) {
+    const article = boardList?.querySelector(`[data-post-id="${cssEscape(slug)}"]`);
     const textarea = article?.querySelector('.answer-editor textarea');
     const answer = (textarea?.value || '').trim();
     if (!answer) {
       alert('답변 내용을 입력해주세요.');
       return;
     }
-    upsertPost(postId, { answer, status: '답변완료' });
-    renderBoard();
+    try {
+      const response = await fetch('/api/admin-answer', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ slug, answer })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || '답변 저장 실패');
+      await loadPosts();
+    } catch (error) {
+      alert(error.message);
+    }
   }
 
-  function deletePost(postId) {
+  async function deletePost(slug) {
     if (!confirm('이 질문을 삭제할까요?')) return;
-    const deleted = getDeletedIds();
-    if (!deleted.includes(postId)) deleted.push(postId);
-    localStorage.setItem(STORAGE_KEY + '_deleted', JSON.stringify(deleted));
-    const posts = getLocalPosts().filter((post) => post.id !== postId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
-    renderBoard();
-  }
-
-  function getAllPosts() {
-    const deleted = getDeletedIds();
-    const mergedSeeds = seedPosts.map((seed) => {
-      const override = getLocalPosts().find((post) => post.id === seed.id);
-      return override || seed;
-    });
-    const localOnly = getLocalPosts().filter((post) => !String(post.id).startsWith('seed-'));
-    return localOnly.concat(mergedSeeds).filter((post) => !deleted.includes(post.id));
-  }
-
-  function findPost(postId) {
-    return getAllPosts().find((post) => post.id === postId);
-  }
-
-  function upsertPost(postId, patch) {
-    const localPosts = getLocalPosts();
-    const localIndex = localPosts.findIndex((post) => post.id === postId);
-    if (localIndex >= 0) {
-      localPosts[localIndex] = { ...localPosts[localIndex], ...patch };
-    } else {
-      const seed = seedPosts.find((post) => post.id === postId);
-      if (!seed) return;
-      localPosts.unshift({ ...seed, ...patch });
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(localPosts.slice(0, 30)));
-  }
-
-  function getLocalPosts() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
+      const response = await fetch('/api/admin-delete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ slug })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.error || '질문 삭제 실패');
+      await loadPosts();
     } catch (error) {
-      return [];
+      alert(error.message);
     }
   }
 
-  function getDeletedIds() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY + '_deleted');
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
+  function findPost(slug) {
+    return posts.find((post) => post.slug === slug || post.id === slug);
   }
 
   function setLoginResult(message, type) {
