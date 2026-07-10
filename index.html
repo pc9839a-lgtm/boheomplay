@@ -17,9 +17,9 @@
   <meta name="theme-color" content="#ffffff" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
-  <link rel="stylesheet" href="/assets/css/styles.css?v=20260710-ad-copy" />
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260710-final-copy" />
   <style>
-    body{padding-bottom:88px}
+    body{padding-bottom:108px}
     .insurance-hero{min-height:800px;background:#f5f3ef;border-bottom:1px solid #e5e1da;display:grid;place-items:center;text-align:center;overflow:hidden;position:relative;padding:92px 0 86px}
     .insurance-hero:before{content:'';position:absolute;inset:auto 0 0;height:240px;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.72))}
     .insurance-hero:after{content:'';position:absolute;left:50%;top:52%;width:680px;height:680px;transform:translate(-50%,-50%);border:1px solid rgba(17,17,17,.045);border-radius:50%;box-shadow:0 0 0 90px rgba(255,255,255,.16),0 0 0 180px rgba(255,255,255,.11);animation:heroHalo 12s ease-in-out infinite}
@@ -30,9 +30,12 @@
     .insurance-object{position:relative;width:min(760px,92vw);height:330px;margin:56px auto 0;opacity:0;animation:objectIn .9s cubic-bezier(.16,1,.3,1) forwards .52s}
     .insurance-shield{position:absolute;left:50%;top:4px;transform:translateX(-50%);width:300px;height:300px;border:1px solid #ded9d1;border-radius:48% 48% 42% 42%;background:rgba(255,255,255,.22);animation:shieldBreath 6s ease-in-out infinite}
     .insurance-doc{position:absolute;left:50%;top:42px;transform:translateX(-50%);width:min(430px,76vw);padding:28px 30px 26px;border:1px solid #ddd8d0;border-radius:26px;background:#fff;box-shadow:0 28px 70px rgba(17,17,17,.09);text-align:left;animation:docFloat 5.8s ease-in-out infinite}
-    .insurance-doc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #eeeae4}.insurance-doc-head strong{font-size:19px;letter-spacing:-.04em}.insurance-doc-head span{font-size:12px;color:#777;font-weight:900}
-    .insurance-check{display:grid;gap:13px}.insurance-check div{display:flex;align-items:center;gap:12px;color:#333;font-size:15px;font-weight:750;opacity:0;transform:translateY(8px);animation:checkIn .55s ease forwards}.insurance-check div:nth-child(1){animation-delay:1s}.insurance-check div:nth-child(2){animation-delay:1.14s}.insurance-check div:nth-child(3){animation-delay:1.28s}.insurance-check i{width:22px;height:22px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900}
-    .insurance-mini{position:absolute;background:#fff;border:1px solid #e0dbd3;border-radius:18px;padding:15px 18px;box-shadow:0 18px 44px rgba(17,17,17,.075);font-size:14px;font-weight:900;color:#222;opacity:0;animation:miniIn .7s cubic-bezier(.16,1,.3,1) forwards, miniFloat 5.4s ease-in-out infinite}.insurance-mini small{display:block;margin-top:4px;color:#777;font-size:12px;font-weight:700}.mini-a{left:12px;top:96px;animation-delay:.82s,1.55s}.mini-b{right:14px;top:110px;animation-delay:.9s,1.7s}.mini-c{left:78px;bottom:28px;animation-delay:1s,1.9s}.mini-d{right:68px;bottom:32px;animation-delay:1.08s,2.1s}
+    .insurance-doc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #eeeae4}
+    .insurance-doc-head strong{font-size:19px;letter-spacing:-.04em}.insurance-doc-head span{font-size:12px;color:#777;font-weight:900}
+    .insurance-check{display:grid;gap:13px}.insurance-check div{display:flex;align-items:center;gap:12px;color:#333;font-size:15px;font-weight:750;opacity:0;transform:translateY(8px);animation:checkIn .55s ease forwards}.insurance-check div:nth-child(1){animation-delay:1s}.insurance-check div:nth-child(2){animation-delay:1.14s}.insurance-check div:nth-child(3){animation-delay:1.28s}
+    .insurance-check i{width:22px;height:22px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:900}
+    .insurance-mini{position:absolute;background:#fff;border:1px solid #e0dbd3;border-radius:18px;padding:15px 18px;box-shadow:0 18px 44px rgba(17,17,17,.075);font-size:14px;font-weight:900;color:#222;opacity:0;animation:miniIn .7s cubic-bezier(.16,1,.3,1) forwards, miniFloat 5.4s ease-in-out infinite}
+    .insurance-mini small{display:block;margin-top:4px;color:#777;font-size:12px;font-weight:700}.mini-a{left:12px;top:96px;animation-delay:.82s,1.55s}.mini-b{right:14px;top:110px;animation-delay:.9s,1.7s}.mini-c{left:78px;bottom:28px;animation-delay:1s,1.9s}.mini-d{right:68px;bottom:32px;animation-delay:1.08s,2.1s}
     .insurance-question{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:min(360px,82vw);padding:16px 18px;border:1px solid #ddd8d0;border-radius:999px;background:#fff;color:#333;font-size:15px;font-weight:850;box-shadow:0 20px 50px rgba(17,17,17,.075);opacity:0;animation:questionIn .75s cubic-bezier(.16,1,.3,1) forwards 1.18s, questionFloat 5.2s ease-in-out infinite 2s}
 
     .worry-scene{position:relative;background:#fff;padding:112px 0 116px;border-bottom:1px solid #e8e8e8;overflow:hidden}
@@ -41,25 +44,27 @@
     .worry-stage{position:relative;z-index:1;display:grid;grid-template-columns:.92fr 1.08fr;gap:64px;align-items:center}
     .ad-copy span,.answer-copy span{display:inline-flex;margin-bottom:18px;color:#777;font-size:12px;font-weight:900;letter-spacing:.14em}
     .ad-copy h2,.answer-copy h2{margin:0;color:#111;font-size:clamp(46px,6.2vw,78px);line-height:.98;letter-spacing:-.09em}
+    .ad-copy p,.answer-copy p{margin:26px 0 0;color:#555;font-size:19px;line-height:1.75;max-width:500px;font-weight:650;letter-spacing:-.035em}
     .ad-copy .chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.ad-copy .chips b{display:inline-flex;align-items:center;height:38px;padding:0 15px;border:1px solid #ddd8d0;border-radius:999px;background:#fff;color:#222;font-size:13px;font-weight:900}
     .question-rail{position:relative;min-height:500px;border:1px solid #e4dfd7;border-radius:38px;background:#f7f5f1;box-shadow:0 34px 86px rgba(17,17,17,.07);padding:30px;overflow:hidden}
     .rail-glow{position:absolute;inset:42px 50px auto auto;width:260px;height:260px;border:1px solid #e1ddd5;border-radius:50%;background:rgba(255,255,255,.55);animation:haloDrift 8s ease-in-out infinite}
-    .rail-card{position:relative;z-index:1;display:grid;grid-template-columns:54px 1fr;gap:18px;align-items:center;width:88%;padding:19px 22px;margin-bottom:18px;border:1px solid #e1ddd6;border-radius:24px;background:#fff;box-shadow:0 20px 52px rgba(17,17,17,.055);animation:railFloat 5.8s ease-in-out infinite;transition:transform .22s ease,box-shadow .22s ease}.rail-card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 30px 68px rgba(17,17,17,.09)}.rail-card:nth-child(2){margin-left:58px;animation-delay:.45s}.rail-card:nth-child(3){margin-left:18px;animation-delay:.9s}.rail-card:nth-child(4){margin-left:98px;animation-delay:1.35s}.rail-card:nth-child(5){margin-left:36px;margin-bottom:0;animation-delay:1.8s}
+    .rail-card{position:relative;z-index:1;display:grid;grid-template-columns:54px 1fr;gap:18px;align-items:center;width:88%;padding:19px 22px;margin-bottom:18px;border:1px solid #e1ddd6;border-radius:24px;background:#fff;box-shadow:0 20px 52px rgba(17,17,17,.055);animation:railFloat 5.8s ease-in-out infinite;transition:transform .22s ease,box-shadow .22s ease}.rail-card:hover{transform:translateY(-6px) scale(1.01);box-shadow:0 30px 68px rgba(17,17,17,.09)}
+    .rail-card:nth-child(2){margin-left:58px;animation-delay:.45s}.rail-card:nth-child(3){margin-left:18px;animation-delay:.9s}.rail-card:nth-child(4){margin-left:98px;animation-delay:1.35s}.rail-card:nth-child(5){margin-left:36px;margin-bottom:0;animation-delay:1.8s}
     .rail-no{width:48px;height:48px;border-radius:16px;background:#111;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:950}.rail-card strong{display:block;color:#111;font-size:23px;letter-spacing:-.055em}.rail-card small{display:block;margin-top:5px;color:#666;font-size:14px;font-weight:750}.rail-pin{position:absolute;left:28px;bottom:24px;z-index:2;display:inline-flex;align-items:center;height:39px;padding:0 16px;border-radius:999px;background:#111;color:#fff;font-size:13px;font-weight:900;box-shadow:0 18px 44px rgba(17,17,17,.18)}
 
     .answer-scene{background:#f5f3ef;padding:112px 0 118px;border-bottom:1px solid #e5e1da;overflow:hidden}
     .answer-stage{display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
     .answer-mock{position:relative;min-height:510px}.mock-card{position:absolute;width:min(450px,90%);border:1px solid #ddd8d0;border-radius:32px;background:#fff;box-shadow:0 32px 80px rgba(17,17,17,.08);padding:30px;text-align:left;transition:transform .25s ease,box-shadow .25s ease}.mock-card:hover{transform:translateY(-8px);box-shadow:0 42px 96px rgba(17,17,17,.12)}.mock-question{left:0;top:16px}.mock-answer{right:0;bottom:12px;background:#111;color:#fff;border-color:#111}
     .mock-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid rgba(0,0,0,.1);color:#777;font-size:13px;font-weight:900}.mock-answer .mock-top{border-color:rgba(255,255,255,.18);color:#bbb}.mock-card h3{margin:0;font-size:32px;line-height:1.16;letter-spacing:-.07em}.mock-card p{margin:16px 0 0;color:#555;font-size:16px;line-height:1.75}.mock-answer p{color:#ddd}.mock-arrow{position:absolute;left:50%;top:50%;z-index:3;transform:translate(-50%,-50%);width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid #ddd8d0;font-weight:950;box-shadow:0 24px 60px rgba(17,17,17,.11);animation:arrowPulse 3.4s ease-in-out infinite}
-    .answer-copy p{margin:26px 0 0;color:#555;font-size:18px;line-height:1.7;max-width:430px}.answer-copy .line-note{display:inline-flex;margin-top:30px;padding:12px 16px;border:1px solid #ded9d1;border-radius:999px;background:#fff;color:#222;font-size:13px;font-weight:900}
+    .answer-copy .line-note{display:inline-flex;margin-top:30px;padding:12px 16px;border:1px solid #ded9d1;border-radius:999px;background:#fff;color:#222;font-size:13px;font-weight:900}
 
     .reveal{opacity:0;transform:translateY(32px);transition:opacity .76s cubic-bezier(.16,1,.3,1),transform .76s cubic-bezier(.16,1,.3,1)}.reveal.is-visible{opacity:1;transform:translateY(0)}.reveal-delay-1{transition-delay:.08s}.reveal-delay-2{transition-delay:.16s}.reveal-delay-3{transition-delay:.24s}
-    .floating-ask{position:fixed;left:50%;bottom:24px;z-index:90;transform:translateX(-50%);height:50px;padding:0 24px;border-radius:999px;background:#111;color:#fff;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:950;letter-spacing:-.025em;box-shadow:0 18px 48px rgba(0,0,0,.2);transition:transform .18s ease,box-shadow .18s ease,background .18s ease;animation:ctaFloat 4.6s ease-in-out infinite}.floating-ask:hover{background:#222;transform:translateX(-50%) translateY(-3px);box-shadow:0 24px 62px rgba(0,0,0,.26)}.board-row{transition:background .18s ease,transform .18s ease}.board-row:hover{transform:translateX(4px)}
+    .floating-ask{position:fixed;left:50%;bottom:24px;z-index:90;transform:translateX(-50%);height:64px;padding:0 36px;border-radius:999px;background:#111;color:#fff;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:18px;font-weight:950;letter-spacing:-.035em;box-shadow:0 22px 60px rgba(0,0,0,.26);transition:transform .18s ease,box-shadow .18s ease,background .18s ease;animation:ctaFloat 4.6s ease-in-out infinite}.floating-ask:hover{background:#222;transform:translateX(-50%) translateY(-3px);box-shadow:0 28px 72px rgba(0,0,0,.32)}.board-row{transition:background .18s ease,transform .18s ease}.board-row:hover{transform:translateX(4px)}
 
     #write.write-section{background:#f6f6f4!important;padding:96px 0 110px!important;border-top:1px solid #e6e3df!important;scroll-margin-top:84px}#write .write-wrap{max-width:860px!important}#write .write-card{background:#fff!important;border:1px solid #e2ded8!important;border-radius:28px!important;padding:42px!important;box-shadow:0 24px 70px rgba(17,17,17,.08)!important}#write .write-title{display:grid!important;grid-template-columns:1fr!important;text-align:center!important;gap:8px!important;margin:0 0 30px!important;padding:0 0 26px!important;border-bottom:1px solid #eeeae5!important}#write .write-title span{margin:0!important;color:#888!important;font-size:12px!important;font-weight:900!important;letter-spacing:.18em!important}#write .write-title h2{margin:0!important;font-size:38px!important;letter-spacing:-.07em!important;line-height:1.12!important}#write .write-title p{margin:6px auto 0!important;max-width:420px!important;text-align:center!important;color:#666!important;font-size:15px!important;line-height:1.65!important}#write .question-form{gap:18px!important;background:transparent!important;border:0!important;padding:0!important}#write .visibility-toggle{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;border:0!important;background:#f1f1ef!important;border-radius:18px!important;padding:6px!important}#write .visibility-toggle label{border:0!important;border-radius:14px!important;padding:15px 12px!important;background:transparent!important;color:#666!important;font-weight:900!important;transition:.18s ease!important}#write .visibility-toggle label+label{border-left:0!important}#write .visibility-toggle label:has(input:checked){background:#111!important;color:#fff!important;box-shadow:0 10px 24px rgba(0,0,0,.14)!important}#write .private-fields{border:1px solid #e5e0da!important;border-radius:20px!important;background:#faf9f7!important;padding:18px!important;gap:14px!important}#write .private-notice{font-size:13px!important;color:#555!important;line-height:1.6!important}#write .form-row{gap:14px!important}#write .question-form label{gap:8px!important}#write .question-form label span{font-size:13px!important;font-weight:900!important;color:#222!important}#write .question-form input,#write .question-form select,#write .question-form textarea{height:auto!important;border:1px solid #e0ddd8!important;background:#fbfbfa!important;border-radius:16px!important;padding:16px 16px!important;font-size:15px!important;outline:none!important;transition:.15s ease!important}#write .question-form textarea{min-height:150px!important;resize:vertical!important;line-height:1.7!important}#write .question-form input:focus,#write .question-form select:focus,#write .question-form textarea:focus{border-color:#111!important;background:#fff!important;box-shadow:0 0 0 4px rgba(17,17,17,.06)!important}#write .submit-button{width:100%!important;border:0!important;border-radius:18px!important;background:#111!important;color:#fff!important;padding:17px 18px!important;font-size:16px!important;font-weight:900!important;box-shadow:0 16px 36px rgba(0,0,0,.16)!important}#write .submit-button:hover{background:#2a2a2a!important}
 
     @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}@keyframes objectIn{from{opacity:0;transform:translateY(28px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes shieldBreath{0%,100%{transform:translateX(-50%) translateY(0) scale(1)}50%{transform:translateX(-50%) translateY(-10px) scale(1.025)}}@keyframes docFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-12px)}}@keyframes miniIn{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes miniFloat{0%,100%{margin-top:0}50%{margin-top:-10px}}@keyframes questionIn{from{opacity:0;transform:translateX(-50%) translateY(18px) scale(.96)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}@keyframes questionFloat{0%,100%{margin-bottom:0}50%{margin-bottom:8px}}@keyframes checkIn{to{opacity:1;transform:translateY(0)}}@keyframes heroHalo{0%,100%{opacity:.75;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.045)}}@keyframes railFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}@keyframes haloDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-16px,12px) scale(1.05)}}@keyframes arrowPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.08)}}@keyframes ctaFloat{0%,100%{margin-bottom:0}50%{margin-bottom:6px}}
-    @media(max-width:900px){body{padding-bottom:86px}.insurance-hero{min-height:680px;padding:70px 0 64px}.insurance-hero h1{font-size:48px}.insurance-hero p{font-size:17px}.insurance-object{height:290px;margin-top:42px}.insurance-doc{width:min(360px,82vw);padding:24px 22px}.insurance-shield{width:240px;height:240px}.insurance-mini{display:none}.insurance-question{bottom:4px}.worry-scene,.answer-scene{padding:78px 0}.worry-stage,.answer-stage{grid-template-columns:1fr;gap:38px}.question-rail{min-height:auto}.rail-card,.rail-card:nth-child(2),.rail-card:nth-child(3),.rail-card:nth-child(4),.rail-card:nth-child(5){width:100%;margin-left:0}.rail-pin{position:relative;left:auto;bottom:auto;margin-top:18px}.answer-mock{min-height:520px}.mock-question{left:0}.mock-answer{right:0}.ad-copy h2,.answer-copy h2{font-size:46px}.floating-ask{height:48px;padding:0 22px}#write .write-card{padding:28px 20px!important;border-radius:22px!important}#write .visibility-toggle{grid-template-columns:1fr!important}#write .form-row{grid-template-columns:1fr!important}#write .write-title h2{font-size:32px!important}}
+    @media(max-width:900px){body{padding-bottom:104px}.insurance-hero{min-height:680px;padding:70px 0 64px}.insurance-hero h1{font-size:48px}.insurance-hero p{font-size:17px}.insurance-object{height:290px;margin-top:42px}.insurance-doc{width:min(360px,82vw);padding:24px 22px}.insurance-shield{width:240px;height:240px}.insurance-mini{display:none}.insurance-question{bottom:4px}.worry-scene,.answer-scene{padding:78px 0}.worry-stage,.answer-stage{grid-template-columns:1fr;gap:38px}.question-rail{min-height:auto}.rail-card,.rail-card:nth-child(2),.rail-card:nth-child(3),.rail-card:nth-child(4),.rail-card:nth-child(5){width:100%;margin-left:0}.rail-pin{position:relative;left:auto;bottom:auto;margin-top:18px}.answer-mock{min-height:520px}.mock-question{left:0}.mock-answer{right:0}.ad-copy h2,.answer-copy h2{font-size:46px}.ad-copy p,.answer-copy p{font-size:17px}.floating-ask{height:60px;width:86vw;padding:0 22px;font-size:17px}#write .write-card{padding:28px 20px!important;border-radius:22px!important}#write .visibility-toggle{grid-template-columns:1fr!important}#write .form-row{grid-template-columns:1fr!important}#write .write-title h2{font-size:32px!important}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}.insurance-hero-mark,.insurance-hero h1,.insurance-hero p,.insurance-object,.insurance-mini,.insurance-question,.insurance-check div,.reveal{opacity:1!important;transform:none!important}}
   </style>
   <script type="application/ld+json">
@@ -94,16 +99,17 @@
       <div class="wrap worry-stage">
         <div class="ad-copy reveal">
           <span>INSURANCE</span>
-          <h2>보험료는 올랐고<br />이유는 모릅니다</h2>
-          <div class="chips"><b>오른 보험료</b><b>빠진 보장</b><b>가입 거절</b></div>
+          <h2>보험료는 오르는데<br />그냥 두긴 불안합니다</h2>
+          <p>실비보험, 암보험, 유병자보험, 부모님 보험까지<br />헷갈리는 건 그대로 물어보세요.</p>
+          <div class="chips"><b>보험료</b><b>보장</b><b>가입 가능</b></div>
         </div>
         <div class="question-rail reveal reveal-delay-1">
           <div class="rail-glow"></div>
-          <article class="rail-card"><div class="rail-no">01</div><div><strong>실비보험</strong><small>또 올랐는데, 계속?</small></div></article>
-          <article class="rail-card"><div class="rail-no">02</div><div><strong>암보험</strong><small>진단비, 이 정도면?</small></div></article>
-          <article class="rail-card"><div class="rail-no">03</div><div><strong>유병자보험</strong><small>병력 있어도 될까?</small></div></article>
-          <article class="rail-card"><div class="rail-no">04</div><div><strong>부모님 보험</strong><small>줄이면 위험할까?</small></div></article>
-          <div class="rail-pin">그냥 넘기기 전에</div>
+          <article class="rail-card"><div class="rail-no">01</div><div><strong>실비보험</strong><small>또 올랐는데, 계속 유지?</small></div></article>
+          <article class="rail-card"><div class="rail-no">02</div><div><strong>암보험</strong><small>진단비, 이 정도면 충분?</small></div></article>
+          <article class="rail-card"><div class="rail-no">03</div><div><strong>유병자보험</strong><small>병력 있어도 가입 가능?</small></div></article>
+          <article class="rail-card"><div class="rail-no">04</div><div><strong>부모님 보험</strong><small>보험료, 줄여도 괜찮을까?</small></div></article>
+          <div class="rail-pin">그대로 질문하세요</div>
         </div>
       </div>
     </section>
@@ -111,15 +117,15 @@
     <section class="answer-scene">
       <div class="wrap answer-stage">
         <div class="answer-mock reveal">
-          <article class="mock-card mock-question"><div class="mock-top"><span>QUESTION</span><span>공개 질문</span></div><h3>내 보험,<br />이대로 둬도 될까요?</h3><p>보험료는 오르고, 보장은 잘 모르겠습니다.</p></article>
+          <article class="mock-card mock-question"><div class="mock-top"><span>QUESTION</span><span>공개 질문</span></div><h3>실비보험료가 올랐는데<br />해지해도 될까요?</h3><p>현재 보험료와 병원 이용 이력이 있습니다.</p></article>
           <div class="mock-arrow">→</div>
-          <article class="mock-card mock-answer"><div class="mock-top"><span>ANSWER</span><span>답변완료</span></div><h3>해지부터?<br />잠깐만요</h3><p>빠지는 보장부터 봅니다.</p></article>
+          <article class="mock-card mock-answer"><div class="mock-top"><span>ANSWER</span><span>답변완료</span></div><h3>해지 전<br />재가입 가능성부터</h3><p>비어버릴 수 있는 보장부터 먼저 봅니다.</p></article>
         </div>
         <div class="answer-copy reveal reveal-delay-1">
-          <span>NO MORE SEARCH</span>
-          <h2>검색해도<br />내 얘기는 없습니다</h2>
-          <p>내 보험 그대로 물어보세요.</p>
-          <div class="line-note">내 질문 그대로</div>
+          <span>ASK</span>
+          <h2>혼자 붙잡지 말고<br />질문으로 남기세요</h2>
+          <p>내 상황을 남기면<br />답변은 게시글에서 확인할 수 있습니다.</p>
+          <div class="line-note">질문으로 남기기</div>
         </div>
       </div>
     </section>
@@ -138,9 +144,9 @@
   </main>
 
   <footer class="footer"><div class="wrap footer-inner"><p><strong>WAYZI(보험플레이)</strong> · 대표 김도윤 · 사업자번호 538-42-01450</p><nav><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></nav></div></footer>
-  <a class="floating-ask" href="#write" aria-label="질문하기">질문하기</a>
+  <a class="floating-ask" href="#write" aria-label="내 보험 질문하기">내 보험 질문하기</a>
   <script>(()=>{const items=Array.from(document.querySelectorAll('.reveal'));if(!items.length)return;if(!('IntersectionObserver'in window)){items.forEach((item)=>item.classList.add('is-visible'));return;}const observer=new IntersectionObserver((entries)=>{entries.forEach((entry)=>{if(!entry.isIntersecting)return;entry.target.classList.add('is-visible');observer.unobserve(entry.target);});},{threshold:.2});items.forEach((item)=>observer.observe(item));})();</script>
-  <script src="/assets/js/config.js?v=20260710-ad-copy"></script>
-  <script src="/assets/js/main.js?v=20260710-ad-copy"></script>
+  <script src="/assets/js/config.js?v=20260710-final-copy"></script>
+  <script src="/assets/js/main.js?v=20260710-final-copy"></script>
 </body>
 </html>
