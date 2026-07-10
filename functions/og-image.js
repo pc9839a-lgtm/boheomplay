@@ -17,13 +17,17 @@ const PARTS = [
   'part08b06.txt'
 ];
 
+const EXPECTED_SHA256 = '733c1f029fa1d571eee41e651699ad1c03a0459806660d96112b78555e9f790f';
+
 function decodeBase64(value) {
   const binary = atob(value);
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+function toHex(buffer) {
+  return Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 export async function onRequest({ request }) {
@@ -35,17 +39,16 @@ export async function onRequest({ request }) {
       return response.text();
     }));
 
-    const base64 = chunks.join('').replace(/\s+/g, '');
-    const bytes = decodeBase64(base64);
+    const bytes = decodeBase64(chunks.join('').replace(/\s+/g, ''));
+    const digest = toHex(await crypto.subtle.digest('SHA-256', bytes));
 
-    if (bytes.length !== 26207) {
+    if (bytes.length !== 26207 || digest !== EXPECTED_SHA256) {
       return new Response('Invalid OG image data', { status: 500 });
     }
 
     return new Response(bytes, {
       headers: {
         'content-type': 'image/jpeg',
-        'content-length': String(bytes.length),
         'cache-control': 'public, max-age=31536000, immutable'
       }
     });
