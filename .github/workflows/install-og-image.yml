@@ -14,31 +14,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore image and metadata
+      - name: Build verified static image
         run: |
-          curl -sSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs/e510a0504ccca61dd4be978f262236fcc46f90ac" -o /tmp/blob.json
+          cat og-b64/part*.txt | tr -d '\r\n ' | base64 --decode > og-image.jpg
+          echo "733c1f029fa1d571eee41e651699ad1c03a0459806660d96112b78555e9f790f  og-image.jpg" | sha256sum --check
+          test "$(stat -c%s og-image.jpg)" = "26207"
+
           python3 - <<'PY'
-          import base64, json
+          import re
           from pathlib import Path
 
-          payload = json.loads(Path('/tmp/blob.json').read_text())
-          Path('og-image.jpg').write_bytes(base64.b64decode(payload['content']))
-
           p = Path('index.html')
-          html = p.read_text(encoding='utf-8').replace('https://boheomplay.pages.dev/', 'https://boheomplay.pagero.kr/')
-          tags = '''  <meta property="og:image" content="https://boheomplay.pagero.kr/og-image.jpg" />
-          <meta property="og:image:secure_url" content="https://boheomplay.pagero.kr/og-image.jpg" />
-          <meta property="og:image:width" content="1200" />
-          <meta property="og:image:height" content="630" />
-          <meta property="og:image:type" content="image/jpeg" />
-          <meta name="twitter:image" content="https://boheomplay.pagero.kr/og-image.jpg" />
-          '''
-          if 'property="og:image"' not in html:
-              html = html.replace('  <meta name="twitter:card" content="summary_large_image" />', tags + '  <meta name="twitter:card" content="summary_large_image" />')
+          html = p.read_text(encoding='utf-8')
+          html = html.replace('https://boheomplay.pages.dev/', 'https://boheomplay.pagero.kr/')
+
+          html = re.sub(r'\s*<meta property="og:image(?::url|:secure_url|:width|:height|:type|:alt)?"[^>]*?/?>', '', html)
+          html = re.sub(r'\s*<meta name="twitter:image"[^>]*?/?>', '', html)
+
+          tags = '''
+  <meta property="og:image" content="https://boheomplay.pagero.kr/og-image.jpg" />
+  <meta property="og:image:secure_url" content="https://boheomplay.pagero.kr/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="보험플레이 보험? 무엇이든 물어보세요" />
+  <meta name="twitter:image" content="https://boheomplay.pagero.kr/og-image.jpg" />'''
+          html = html.replace('  <meta name="twitter:card" content="summary_large_image" />', tags + '\n  <meta name="twitter:card" content="summary_large_image" />')
           p.write_text(html, encoding='utf-8')
           PY
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "[og-installed] Add static OG image"
+          commit_message: "[og-installed] Add verified static OG image"
           file_pattern: "index.html og-image.jpg"
