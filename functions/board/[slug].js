@@ -1,4 +1,4 @@
-import { getBoardPost, renderBoardPost, renderBoardPost as render, html } from '../_board.js';
+import { getBoardPost, renderBoardPost, html } from '../_board.js';
 import { renderNotFound } from '../_render.js';
 
 export async function onRequest(context) {
@@ -6,7 +6,7 @@ export async function onRequest(context) {
     const slug = context.params.slug;
     const post = await getBoardPost(context.env, slug, { includePrivate: false });
     if (!post) return html(renderNotFound(), 404);
-    return html(render(post));
+    return html(renderBoardPost(post));
   } catch (error) {
     return html(renderNotFound(), 404);
   }
