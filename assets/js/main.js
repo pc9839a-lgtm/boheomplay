@@ -16,66 +16,14 @@
   const privatePhoneInput = $('#privatePhoneInput');
   let activeFilter = '전체';
   let openPostId = '';
+  let remotePosts = [];
 
   const seedPosts = [
-    {
-      id: 'seed-1007',
-      no: 1007,
-      category: '실비보험',
-      title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?',
-      message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '방금 전',
-      href: '/q/silbi-premium-increase-cancel',
-      answer: '기존 실비는 해지 전 재가입 가능성과 보장 공백을 먼저 확인해야 합니다. 보험료가 부담된다면 실비만 보지 말고 전체 보험료 중 중복 특약이 있는지 같이 보는 게 좋습니다.'
-    },
-    {
-      id: 'seed-1006',
-      no: 1006,
-      category: '유병자보험',
-      title: '당뇨약 복용 중인데 보험 가입 가능한가요?',
-      message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.',
-      nickname: '익명',
-      status: '답변대기',
-      time: '3분 전',
-      href: '/q/diabetes-insurance-available'
-    },
-    {
-      id: 'seed-1005',
-      no: 1005,
-      category: '부모님 보험',
-      title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?',
-      message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '8분 전',
-      href: '/q/parents-insurance-review-order',
-      answer: '부모님 보험은 실비 유지 여부를 먼저 보고, 그 다음 암·뇌·심장 진단비와 간병 보장을 나눠서 확인하는 순서가 좋습니다. 오래된 보험은 무조건 해지하지 말고 유지 가치가 있는 담보인지 먼저 확인해야 합니다.'
-    },
-    {
-      id: 'seed-1004',
-      no: 1004,
-      category: '암보험',
-      title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?',
-      message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.',
-      nickname: '익명',
-      status: '답변대기',
-      time: '12분 전',
-      href: '/q/cancer-insurance-30s-needed'
-    },
-    {
-      id: 'seed-1003',
-      no: 1003,
-      category: '보험료',
-      title: '보험료를 줄이고 싶은데 어떤 특약부터 봐야 하나요?',
-      message: '월 보험료가 부담됩니다. 해지 말고 줄일 수 있는 방법이 있는지 궁금합니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '20분 전',
-      href: '/q/reduce-insurance-premium',
-      answer: '보험료를 줄일 때는 실비처럼 다시 가입이 어려울 수 있는 보장부터 무조건 해지하면 안 됩니다. 중복 담보, 갱신형 특약, 우선순위가 낮은 특약을 먼저 확인하는 방식이 좋습니다.'
-    }
+    { id: 'seed-1007', no: 1007, category: '실비보험', title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?', message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.', nickname: '익명', status: '답변완료', time: '방금 전', href: '/q/silbi-premium-increase-cancel' },
+    { id: 'seed-1006', no: 1006, category: '유병자보험', title: '당뇨약 복용 중인데 보험 가입 가능한가요?', message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.', nickname: '익명', status: '답변대기', time: '3분 전', href: '/q/diabetes-insurance-available' },
+    { id: 'seed-1005', no: 1005, category: '부모님 보험', title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?', message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.', nickname: '익명', status: '답변완료', time: '8분 전', href: '/q/parents-insurance-review-order' },
+    { id: 'seed-1004', no: 1004, category: '암보험', title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?', message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.', nickname: '익명', status: '답변대기', time: '12분 전', href: '/q/cancer-insurance-30s-needed' },
+    { id: 'seed-1003', no: 1003, category: '보험료', title: '보험료를 줄이고 싶은데 어떤 특약부터 봐야 하나요?', message: '월 보험료가 부담됩니다. 해지 말고 줄일 수 있는 방법이 있는지 궁금합니다.', nickname: '익명', status: '답변완료', time: '20분 전', href: '/q/reduce-insurance-premium' }
   ];
 
   init();
@@ -88,6 +36,7 @@
     bindVisibilityToggle();
     fillTrackingFields();
     renderBoard();
+    loadRemotePosts();
     bindQuestionForm();
   }
 
@@ -152,6 +101,19 @@
     return questionForm?.querySelector('input[name="visibility"]:checked')?.value || 'public';
   }
 
+  async function loadRemotePosts() {
+    try {
+      const response = await fetch('/api/board-posts', { method: 'GET' });
+      if (!response.ok) throw new Error('board api failed');
+      const data = await response.json();
+      if (!data.ok || !Array.isArray(data.posts)) return;
+      remotePosts = data.posts;
+      renderBoard();
+    } catch (error) {
+      console.warn('[boheomplay] remote board list failed', error);
+    }
+  }
+
   function bindQuestionForm() {
     questionForm?.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -170,61 +132,68 @@
         return;
       }
 
-      const visibility = String(formData.get('visibility') || 'public');
-      const isPrivate = visibility === 'private';
-      const rawTitle = String(formData.get('title') || '').trim();
-      const rawMessage = String(formData.get('message') || '').trim();
-      const category = String(formData.get('category') || '기타');
-      const nickname = String(formData.get('nickname') || '').trim() || '익명';
-      const privateName = String(formData.get('private_name') || '').trim();
-      const privatePhone = String(formData.get('private_phone') || '').trim();
-
-      const post = {
-        id: 'local-' + Date.now(),
-        no: getNextNo(),
-        category,
-        title: isPrivate ? '비공개 질문입니다.' : rawTitle,
-        message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : rawMessage,
-        original_title: rawTitle,
-        original_message: rawMessage,
-        visibility,
-        nickname: isPrivate ? '비공개' : nickname,
-        status: '답변대기',
-        time: '방금 전'
-      };
-
-      saveLocalPost(post);
-      activeFilter = '전체';
-      openPostId = post.id;
-      $$('#boardTabs button').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === '전체'));
-      renderBoard();
-      questionForm.reset();
-      updatePrivateFields();
-      fillTrackingFields();
-      setResult('게시글이 등록되었습니다.', 'success');
-      document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const payload = buildPayload(formData);
+      setResult('게시글을 저장 중입니다.', 'pending');
 
       try {
-        if (config.apiUrl) {
-          const apiData = new FormData();
-          apiData.append('action', 'board_question');
-          apiData.append('site_name', '보험플레이');
-          apiData.append('source', '보험질문게시판');
-          apiData.append('visibility', visibility);
-          apiData.append('category', category);
-          apiData.append('title', rawTitle);
-          apiData.append('message', rawMessage);
-          apiData.append('nickname', nickname);
-          apiData.append('private_name', privateName);
-          apiData.append('private_phone', privatePhone);
-          apiData.append('page_url', window.location.href);
-          apiData.append('referrer', document.referrer || 'direct');
-          await submitWithTimeout(config.apiUrl, apiData, config.submitTimeout || 30000);
+        const response = await fetch('/api/board-posts', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok || !data.post) throw new Error(data.error || '게시글 저장 실패');
+
+        remotePosts.unshift(data.post);
+        activeFilter = '전체';
+        openPostId = data.post.href ? '' : data.post.id;
+        $$('#boardTabs button').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === '전체'));
+        renderBoard();
+        questionForm.reset();
+        updatePrivateFields();
+        fillTrackingFields();
+        sendBackupToAppsScript(payload);
+
+        if (data.post.href) {
+          window.location.href = data.post.href;
+          return;
         }
+
+        setResult('비공개 질문이 등록되었습니다.', 'success');
+        document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
-        console.warn('[boheomplay] board post remote save failed', error);
+        console.error('[boheomplay] board save failed', error);
+        setResult('게시글 저장소 설정이 필요합니다. 관리자에게 문의해주세요.', 'error');
       }
     });
+  }
+
+  function buildPayload(formData) {
+    return {
+      visibility: String(formData.get('visibility') || 'public'),
+      category: String(formData.get('category') || '기타'),
+      title: String(formData.get('title') || '').trim(),
+      message: String(formData.get('message') || '').trim(),
+      nickname: String(formData.get('nickname') || '').trim() || '익명',
+      private_name: String(formData.get('private_name') || '').trim(),
+      private_phone: String(formData.get('private_phone') || '').trim()
+    };
+  }
+
+  async function sendBackupToAppsScript(payload) {
+    try {
+      if (!config.apiUrl) return;
+      const apiData = new FormData();
+      apiData.append('action', 'board_question');
+      apiData.append('site_name', '보험플레이');
+      apiData.append('source', '보험질문게시판');
+      Object.entries(payload).forEach(([key, value]) => apiData.append(key, value));
+      apiData.append('page_url', window.location.href);
+      apiData.append('referrer', document.referrer || 'direct');
+      await submitWithTimeout(config.apiUrl, apiData, config.submitTimeout || 30000);
+    } catch (error) {
+      console.warn('[boheomplay] backup submit failed', error);
+    }
   }
 
   function renderBoard() {
@@ -237,7 +206,7 @@
     }
 
     boardList.innerHTML = posts.map((post) => {
-      const answered = Boolean(post.answer);
+      const answered = post.status === '답변완료' || Boolean(post.answer);
       const rowContent = `
         <span class="board-no">${escapeHtml(post.no)}</span>
         <span class="board-category">${escapeHtml(post.category)}</span>
@@ -247,11 +216,7 @@
       `;
 
       if (post.href) {
-        return `
-          <article class="board-item">
-            <a class="board-row" href="${escapeHtml(post.href)}">${rowContent}</a>
-          </article>
-        `;
+        return `<article class="board-item"><a class="board-row" href="${escapeHtml(post.href)}">${rowContent}</a></article>`;
       }
 
       const isOpen = openPostId === post.id;
@@ -263,7 +228,7 @@
             <p class="detail-text">${escapeHtml(post.message)}</p>
             <div class="answer-block">
               <div class="detail-label">답변</div>
-              ${answered ? `<p class="detail-text">${escapeHtml(post.answer)}</p>` : '<p class="detail-text answer-empty">아직 답변이 등록되지 않았습니다.</p>'}
+              ${post.answer ? `<p class="detail-text">${escapeHtml(post.answer)}</p>` : '<p class="detail-text answer-empty">아직 답변이 등록되지 않았습니다.</p>'}
             </div>
           </div>
         </article>
@@ -280,13 +245,13 @@
   }
 
   function getAllPosts() {
-    const deleted = getDeletedIds();
-    const mergedSeeds = seedPosts.map((seed) => {
-      const override = getLocalPosts().find((post) => post.id === seed.id);
-      return override || seed;
+    const seen = new Set();
+    return remotePosts.concat(getLocalPosts(), seedPosts).filter((post) => {
+      const key = post.id || post.slug || post.href || post.title;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
-    const localOnly = getLocalPosts().filter((post) => !String(post.id).startsWith('seed-'));
-    return localOnly.concat(mergedSeeds).filter((post) => !deleted.includes(post.id));
   }
 
   function getLocalPosts() {
@@ -297,28 +262,6 @@
     } catch (error) {
       return [];
     }
-  }
-
-  function saveLocalPost(post) {
-    const posts = getLocalPosts();
-    posts.unshift(post);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts.slice(0, 30)));
-  }
-
-  function getDeletedIds() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY + '_deleted');
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function getNextNo() {
-    const posts = getAllPosts();
-    const maxNo = posts.reduce((max, post) => Math.max(max, Number(post.no) || 0), 0);
-    return Math.max(1008, maxNo + 1);
   }
 
   function submitWithTimeout(url, body, timeout) {
