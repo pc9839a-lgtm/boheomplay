@@ -19,11 +19,61 @@
   let remotePosts = [];
 
   const seedPosts = [
-    { id: 'seed-1007', no: 1007, category: '실비보험', title: '실비보험료가 갑자기 올랐는데 유지해야 할까요?', message: '예전 실비라서 유지가 좋다는 말도 있고, 보험료가 부담돼서 고민입니다.', nickname: '익명', status: '답변완료', time: '방금 전', href: '/q/silbi-premium-increase-cancel' },
-    { id: 'seed-1006', no: 1006, category: '유병자보험', title: '당뇨약 복용 중인데 보험 가입 가능한가요?', message: '약은 계속 먹고 있고 최근 입원은 없습니다. 일반 보험도 가능한지 궁금합니다.', nickname: '익명', status: '답변대기', time: '3분 전', href: '/q/diabetes-insurance-available' },
-    { id: 'seed-1005', no: 1005, category: '부모님 보험', title: '부모님 보험료가 너무 비싼데 뭘 줄여야 하나요?', message: '실비는 있는 것 같고 암보험이 여러 개 있습니다. 해지해도 되는 보험을 알고 싶습니다.', nickname: '익명', status: '답변완료', time: '8분 전', href: '/q/parents-insurance-review-order' },
-    { id: 'seed-1004', no: 1004, category: '암보험', title: '30대인데 암보험 진단비를 얼마로 봐야 할까요?', message: '기존 보험에 암진단비가 조금 들어있는데 충분한지 모르겠습니다.', nickname: '익명', status: '답변대기', time: '12분 전', href: '/q/cancer-insurance-30s-needed' },
-    { id: 'seed-1003', no: 1003, category: '보험료', title: '보험료를 줄이고 싶은데 어떤 특약부터 봐야 하나요?', message: '월 보험료가 부담됩니다. 해지 말고 줄일 수 있는 방법이 있는지 궁금합니다.', nickname: '익명', status: '답변완료', time: '20분 전', href: '/q/reduce-insurance-premium' }
+    {
+      id: 'seed-1007',
+      no: 1007,
+      category: '실비보험',
+      title: '실비보험료가 2배 가까이 올랐는데 계속 유지해야 하나요?',
+      message: '예전 실비라 보장은 괜찮다고 들었는데 보험료가 갑자기 부담될 정도로 올랐습니다. 해지하면 다시 가입이 어려울까 봐 고민입니다.',
+      nickname: '익명',
+      status: '답변완료',
+      time: '방금 전',
+      href: '/q/silbi-premium-increase-cancel'
+    },
+    {
+      id: 'seed-1006',
+      no: 1006,
+      category: '유병자보험',
+      title: '당뇨약 복용 중인데 일반보험도 가입 가능한가요?',
+      message: '당뇨약은 계속 복용 중이고 최근 입원이나 수술은 없습니다. 유병자보험만 가능한지, 일반보험 심사도 볼 수 있는지 궁금합니다.',
+      nickname: '익명',
+      status: '답변완료',
+      time: '3분 전',
+      href: '/q/diabetes-insurance-available'
+    },
+    {
+      id: 'seed-1005',
+      no: 1005,
+      category: '부모님 보험',
+      title: '60대 부모님 보험료가 너무 비싼데 어디부터 줄여야 하나요?',
+      message: '실비는 있는 것 같고 암보험, 종합보험이 여러 개 있습니다. 매달 보험료가 부담돼서 줄이고 싶은데 해지했다가 손해 볼까 봐 걱정됩니다.',
+      nickname: '익명',
+      status: '답변완료',
+      time: '8분 전',
+      href: '/q/parents-insurance-review-order'
+    },
+    {
+      id: 'seed-1004',
+      no: 1004,
+      category: '암보험',
+      title: '30대 암보험 진단비 3천만 원이면 부족한가요?',
+      message: '기존 보험에 암진단비가 조금 들어 있는데 충분한지 모르겠습니다. 가족력이 조금 있어서 추가로 준비해야 할지 궁금합니다.',
+      nickname: '익명',
+      status: '답변완료',
+      time: '12분 전',
+      href: '/q/cancer-insurance-30s-needed'
+    },
+    {
+      id: 'seed-1003',
+      no: 1003,
+      category: '보험료',
+      title: '월 보험료가 35만 원인데 줄여도 되는 특약이 있을까요?',
+      message: '실비, 암보험, 종합보험을 합치니 월 보험료가 너무 큽니다. 해지는 무섭고 계속 내기는 부담인데 어떤 순서로 봐야 할까요?',
+      nickname: '익명',
+      status: '답변완료',
+      time: '20분 전',
+      href: '/q/reduce-insurance-premium'
+    }
   ];
 
   init();
