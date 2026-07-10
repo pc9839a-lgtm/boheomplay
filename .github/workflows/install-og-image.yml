@@ -1,0 +1,44 @@
+name: Install OG image
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: ${{ !contains(github.event.head_commit.message, '[og-installed]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore image and metadata
+        run: |
+          curl -sSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs/e510a0504ccca61dd4be978f262236fcc46f90ac" -o /tmp/blob.json
+          python3 - <<'PY'
+          import base64, json
+          from pathlib import Path
+
+          payload = json.loads(Path('/tmp/blob.json').read_text())
+          Path('og-image.jpg').write_bytes(base64.b64decode(payload['content']))
+
+          p = Path('index.html')
+          html = p.read_text(encoding='utf-8').replace('https://boheomplay.pages.dev/', 'https://boheomplay.pagero.kr/')
+          tags = '''  <meta property="og:image" content="https://boheomplay.pagero.kr/og-image.jpg" />
+          <meta property="og:image:secure_url" content="https://boheomplay.pagero.kr/og-image.jpg" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:type" content="image/jpeg" />
+          <meta name="twitter:image" content="https://boheomplay.pagero.kr/og-image.jpg" />
+          '''
+          if 'property="og:image"' not in html:
+              html = html.replace('  <meta name="twitter:card" content="summary_large_image" />', tags + '  <meta name="twitter:card" content="summary_large_image" />')
+          p.write_text(html, encoding='utf-8')
+          PY
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "[og-installed] Add static OG image"
+          file_pattern: "index.html og-image.jpg"
