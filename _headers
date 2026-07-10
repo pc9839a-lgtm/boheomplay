@@ -17,17 +17,7 @@
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
   Pragma: no-cache
 
-/api/admin-login
-  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
-  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  Pragma: no-cache
-
-/api/admin-check
-  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
-  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
-  Pragma: no-cache
-
-/api/admin-logout
+/api/*
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store, no-cache, must-revalidate, max-age=0
   Pragma: no-cache
