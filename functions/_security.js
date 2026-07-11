@@ -41,6 +41,10 @@ export function constantTimeEqual(left, right) {
 export function isSameOrigin(request) {
   const url = new URL(request.url);
   const origin = request.headers.get('origin');
+  const method = String(request.method || 'GET').toUpperCase();
+  const isUnsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+
+  if (isUnsafeMethod && !origin) return false;
   if (origin && origin !== url.origin) return false;
 
   const fetchSite = request.headers.get('sec-fetch-site');
