@@ -38,7 +38,7 @@ function injectSeo(html) {
   return output;
 }
 
-function applySecurityHeaders(headers, pathname) {
+function applySecurityHeaders(headers, pathname, method) {
   headers.set('x-content-type-options', 'nosniff');
   headers.set('x-frame-options', 'DENY');
   headers.set('referrer-policy', 'strict-origin-when-cross-origin');
@@ -48,8 +48,15 @@ function applySecurityHeaders(headers, pathname) {
   headers.set('strict-transport-security', 'max-age=31536000; includeSubDomains');
   headers.set('x-xss-protection', '0');
 
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/')) {
+  const isApi = pathname.startsWith('/api/');
+  const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+  const isUnsafeApi = isApi && !['GET', 'HEAD', 'OPTIONS'].includes(String(method || 'GET').toUpperCase());
+
+  if (isApi || isAdmin) {
     headers.set('x-robots-tag', 'noindex, nofollow, noarchive, nosnippet');
+  }
+
+  if (isAdmin || isUnsafeApi) {
     headers.set('cache-control', 'no-store, no-cache, must-revalidate, max-age=0');
     headers.set('pragma', 'no-cache');
   }
@@ -63,7 +70,7 @@ export async function onRequest(context) {
   const type = response.headers.get('content-type') || '';
   const url = new URL(context.request.url);
   const headers = new Headers(response.headers);
-  applySecurityHeaders(headers, url.pathname);
+  applySecurityHeaders(headers, url.pathname, context.request.method);
 
   let body = response.body;
   if (type.includes('text/html')) {
