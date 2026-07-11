@@ -35,6 +35,7 @@ function validationError(input) {
   if (!ALLOWED_CATEGORIES.has(input.category)) return 'INVALID_CATEGORY';
   if (input.title.length < 5) return 'TITLE_TOO_SHORT';
   if (input.message.length < 15) return 'MESSAGE_TOO_SHORT';
+  if (input.visibility === 'private' && input.private_name.length < 2) return 'INVALID_NAME';
   if (input.visibility === 'private' && !/^01[016789]\d{7,8}$/.test(input.private_phone)) {
     return 'INVALID_PHONE';
   }
@@ -47,6 +48,7 @@ function errorResponse(code, status = 400, headers = {}) {
     INVALID_CATEGORY: '분류를 다시 선택해주세요.',
     TITLE_TOO_SHORT: '제목을 5자 이상 입력해주세요.',
     MESSAGE_TOO_SHORT: '질문 내용을 15자 이상 입력해주세요.',
+    INVALID_NAME: '이름을 정확히 입력해주세요.',
     INVALID_PHONE: '전화번호를 정확히 입력해주세요.',
     TOO_MANY_LINKS: '질문에는 링크를 한 개까지만 넣을 수 있습니다.',
     REPEATED_CHARACTERS: '반복 문자를 줄여주세요.',
