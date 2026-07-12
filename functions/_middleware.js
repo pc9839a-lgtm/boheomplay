@@ -1,5 +1,6 @@
 const SITE_URL = 'https://boheomplay.pagero.kr';
 const OG_IMAGE = `${SITE_URL}/og-image`;
+const COMPLIANCE_SCRIPT = '<script src="/assets/js/compliance.js?v=20260712-v1"></script>';
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -18,7 +19,7 @@ const CONTENT_SECURITY_POLICY = [
   'upgrade-insecure-requests'
 ].join('; ');
 
-function injectSeo(html) {
+function injectSeoAndCompliance(html) {
   let output = html
     .replaceAll('https://boheomplay.pages.dev', SITE_URL)
     .replaceAll(`${SITE_URL}/og-image.jpg`, OG_IMAGE);
@@ -33,6 +34,10 @@ function injectSeo(html) {
 <meta property="og:image:alt" content="보험플레이 보험? 무엇이든 물어보세요" />
 <meta name="twitter:image" content="${OG_IMAGE}" />`;
     output = output.replace('</head>', `${tags}\n</head>`);
+  }
+
+  if (!output.includes('/assets/js/compliance.js')) {
+    output = output.replace('</head>', `${COMPLIANCE_SCRIPT}\n</head>`);
   }
 
   return output;
@@ -76,7 +81,7 @@ export async function onRequest(context) {
   if (type.includes('text/html')) {
     headers.set('content-type', 'text/html; charset=utf-8');
     if (!url.pathname.startsWith('/admin')) {
-      body = injectSeo(await response.text());
+      body = injectSeoAndCompliance(await response.text());
     }
   }
 
