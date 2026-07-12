@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-12",
+  "updatedAt": "2026-07-13",
   "companySlugs": [
     "hanwha-life",
     "abl-life",
@@ -26,7 +26,18 @@
     "kyobo-lifeplanet"
   ],
   "products": [],
-  "publishedQuestions": [],
+  "publishedQuestions": [
+    {"slug":"hanwha-life-policyholder-change-documents","title":"한화생명 보험 계약자를 가족으로 변경하려면 어떤 서류를 확인해야 하나요?","searchIntent":"한화생명 계약자 변경 절차와 필요 서류 확인","companyName":"한화생명","companySlug":"hanwha-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.hanwhalife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"abl-life-claim-documents-check","title":"ABL생명 사고보험금 청구 전에 준비할 서류는 어디서 확인하나요?","searchIntent":"ABL생명 사고보험금 청구 구비서류와 접수 방법 확인","companyName":"ABL생명","companySlug":"abl-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.abllife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"samsung-life-autopay-account-change","title":"삼성생명 보험료 자동이체 계좌를 바꾸면 납입일도 달라지나요?","searchIntent":"삼성생명 자동이체 계좌 변경과 보험료 납입일 확인","companyName":"삼성생명","companySlug":"samsung-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.samsunglife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"heungkuk-life-lapsed-policy-check","title":"흥국생명 보험료 미납으로 계약이 실효된 것 같은데 무엇부터 확인해야 하나요?","searchIntent":"흥국생명 보험료 미납 계약 상태와 부활 절차 확인","companyName":"흥국생명","companySlug":"heungkuk-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.heungkuklife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"kyobo-life-missing-contract-inquiry","title":"교보생명 앱에서 예전 보험 계약이 보이지 않을 때 어떻게 확인하나요?","searchIntent":"교보생명 앱 미표시 계약과 계약조회 방법 확인","companyName":"교보생명","companySlug":"kyobo-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.kyobo.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"im-life-existing-policy-after-name-change","title":"iM라이프생명으로 회사명이 바뀐 뒤 기존 계약은 어디서 조회하나요?","searchIntent":"iM라이프생명 회사명 변경 후 기존 계약 조회","companyName":"iM라이프생명","companySlug":"im-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.imlifeins.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"miraeasset-life-variable-fund-change-check","title":"미래에셋생명 변액보험 펀드를 변경하기 전에 어떤 자료를 확인해야 하나요?","searchIntent":"미래에셋생명 변액보험 펀드 변경 전 확인 자료","companyName":"미래에셋생명","companySlug":"miraeasset-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://life.miraeasset.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"kdb-life-policy-document-reissue","title":"KDB생명 보험증권을 분실했는데 계약 내용을 다시 확인하려면 어떻게 하나요?","searchIntent":"KDB생명 보험증권 분실 후 계약조회와 재발급 확인","companyName":"KDB생명","companySlug":"kdb-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.kdblife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"db-life-beneficiary-change-consent","title":"DB생명 보험 수익자를 변경할 때 계약자와 피보험자의 동의가 모두 필요한가요?","searchIntent":"DB생명 보험금 수익자 변경 동의와 필요 서류 확인","companyName":"DB생명","companySlug":"db-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.idblife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"tongyang-life-maturity-payment-process","title":"동양생명 만기일과 만기보험금 지급 절차는 어디서 확인하나요?","searchIntent":"동양생명 만기일과 만기보험금 청구 절차 확인","companyName":"동양생명","companySlug":"tongyang-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.myangel.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]}
+  ],
   "rules": {
     "dailyQuestionCount": 10,
     "duplicateFields": ["slug", "title", "searchIntent", "companyName", "productName"],
