@@ -11,6 +11,7 @@ import {
 } from '../_security.js';
 
 const CONSENT_VERSION = '2026-07-12-v1';
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 const ALLOWED_CATEGORIES = new Set([
   '실비보험',
   '암보험',
@@ -79,8 +80,12 @@ function mergeBoardPosts(posts) {
   });
 }
 
+function getStore(env) {
+  return env.BOARD_POSTS || env.SECURITY_STORE || null;
+}
+
 async function recordConsent(env, post, consent, identity, request) {
-  const store = env.BOARD_POSTS || env.SECURITY_STORE || null;
+  const store = getStore(env);
   if (!store) return;
 
   await store.put(`board:consent:${post.slug}`, JSON.stringify({
@@ -93,7 +98,14 @@ async function recordConsent(env, post, consent, identity, request) {
     consentedAt: new Date().toISOString(),
     clientKey: identity,
     userAgent: safeText(request.headers.get('user-agent') || '', 220)
-  }), { expirationTtl: 60 * 60 * 24 * 365 });
+  }), { expirationTtl: ONE_YEAR_SECONDS });
+}
+
+async function applyPrivateRetention(env, post) {
+  if (post.visibility !== 'private') return;
+  const store = getStore(env);
+  if (!store) return;
+  await store.put(`board:post:${post.slug}`, JSON.stringify(post), { expirationTtl: ONE_YEAR_SECONDS });
 }
 
 export async function onRequestGet({ env }) {
@@ -153,7 +165,10 @@ export async function onRequestPost({ request, env }) {
     }
 
     const post = await createBoardPost(env, input);
-    await recordConsent(env, post, consent, identity, request);
+    await Promise.all([
+      recordConsent(env, post, consent, identity, request),
+      applyPrivateRetention(env, post)
+    ]);
 
     return json({
       ok: true,
