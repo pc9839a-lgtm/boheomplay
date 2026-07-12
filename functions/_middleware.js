@@ -1,6 +1,7 @@
 const SITE_URL = 'https://boheomplay.pagero.kr';
 const OG_IMAGE = `${SITE_URL}/og-image`;
 const COMPLIANCE_SCRIPT = '<script src="/assets/js/compliance.js?v=20260712-v1"></script>';
+const COMMON_NOTICE = `<section class="site-compliance-notice" aria-label="보험정보 이용안내" style="border-top:1px solid #e5e5e5;background:#f7f7f7"><div class="site-compliance-inner" style="max-width:1180px;margin:0 auto;padding:24px 20px;color:#555;font-size:13px;line-height:1.75"><strong style="display:block;margin-bottom:6px;color:#111;font-size:14px">보험정보 이용안내</strong>보험플레이의 게시글과 답변은 일반적인 보험정보 제공을 위한 것이며 특정 보험상품의 가입 권유, 보험계약 체결 또는 중개를 위한 설명이 아닙니다. 실제 보험료, 보장내용과 가입 가능 여부는 보험회사·상품·개인의 연령, 직업, 병력 및 인수 기준에 따라 달라질 수 있습니다. 기존 보험을 해지하거나 변경하기 전에는 상품설명서와 약관을 확인하고 등록된 보험모집종사자에게 설명을 받으시기 바랍니다.<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px"><a href="/insurance-notice/" style="color:#111;font-weight:800">보험정보 이용안내</a><a href="/privacy/" style="color:#111;font-weight:800">개인정보처리방침</a><a href="/terms/" style="color:#111;font-weight:800">이용약관</a></div></div></section>`;
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -38,6 +39,10 @@ function injectSeoAndCompliance(html) {
 
   if (!output.includes('/assets/js/compliance.js')) {
     output = output.replace('</head>', `${COMPLIANCE_SCRIPT}\n</head>`);
+  }
+
+  if (output.includes('<footer') && !output.includes('class="site-compliance-notice"')) {
+    output = output.replace('<footer', `${COMMON_NOTICE}<footer`);
   }
 
   return output;
