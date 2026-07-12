@@ -1,4 +1,5 @@
 import { createBoardPost, listBoardPosts, json } from '../_board.js';
+import { extraBoardPosts } from '../_extra-qa.js';
 import {
   claimDuplicate,
   clientKey,
@@ -59,14 +60,26 @@ function errorResponse(code, status = 400, headers = {}) {
   return json({ ok: false, error: messages[code] || '요청을 처리할 수 없습니다.' }, status, headers);
 }
 
+function mergeBoardPosts(posts) {
+  const seen = new Set();
+  return extraBoardPosts.concat(posts).filter((post) => {
+    const key = post.slug || post.id || post.href || post.title;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export async function onRequestGet({ env }) {
   try {
     const posts = await listBoardPosts(env, { publicOnly: true });
-    return json({ ok: true, posts }, 200, {
+    return json({ ok: true, posts: mergeBoardPosts(posts) }, 200, {
       'cache-control': 'public, max-age=15, s-maxage=30, stale-while-revalidate=60'
     });
   } catch (error) {
-    return json({ ok: false, error: '게시글을 불러오지 못했습니다.', posts: [] }, 500);
+    return json({ ok: true, posts: extraBoardPosts }, 200, {
+      'cache-control': 'public, max-age=15, s-maxage=30, stale-while-revalidate=60'
+    });
   }
 }
 
