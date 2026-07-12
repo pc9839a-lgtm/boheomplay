@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-12",
+  "companySlugs": [
+    "hanwha-life",
+    "abl-life",
+    "samsung-life",
+    "heungkuk-life",
+    "kyobo-life",
+    "im-life",
+    "miraeasset-life",
+    "kdb-life",
+    "db-life",
+    "tongyang-life",
+    "metlife-korea",
+    "kb-life",
+    "shinhan-life",
+    "chubb-life",
+    "hana-life",
+    "bnp-paribas-cardif-life",
+    "fubon-hyundai-life",
+    "lina-life",
+    "aia-life",
+    "nh-life",
+    "ibk-pension",
+    "kyobo-lifeplanet"
+  ],
+  "products": [],
+  "publishedQuestions": [],
+  "rules": {
+    "dailyQuestionCount": 10,
+    "duplicateFields": ["slug", "title", "searchIntent", "companyName", "productName"],
+    "requiredVerification": ["officialCompanySite", "lifeInsuranceAssociation", "officialDisclosure"],
+    "prohibitedClaims": ["best", "lowest", "guaranteed", "recommended", "affiliated"]
+  }
+}
