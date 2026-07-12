@@ -10,6 +10,7 @@ import {
   stripUnsafeControls
 } from '../_security.js';
 
+const CONSENT_VERSION = '2026-07-12-v1';
 const ALLOWED_CATEGORIES = new Set([
   '실비보험',
   '암보험',
@@ -31,8 +32,14 @@ function safeText(value, max) {
     .slice(0, max);
 }
 
-function validationError(input) {
+function isAgreed(value) {
+  return value === true || value === 'true' || value === 'yes' || value === '1';
+}
+
+function validationError(input, consent) {
   if (String(input.website || '').trim()) return 'BOT_DETECTED';
+  if (!consent.privacy || !consent.sensitive) return 'CONSENT_REQUIRED';
+  if (input.visibility === 'public' && !consent.publicPosting) return 'PUBLIC_CONSENT_REQUIRED';
   if (!ALLOWED_CATEGORIES.has(input.category)) return 'INVALID_CATEGORY';
   if (input.title.length < 5) return 'TITLE_TOO_SHORT';
   if (input.message.length < 15) return 'MESSAGE_TOO_SHORT';
@@ -46,6 +53,8 @@ function validationError(input) {
 function errorResponse(code, status = 400, headers = {}) {
   const messages = {
     BOT_DETECTED: '등록할 수 없는 요청입니다.',
+    CONSENT_REQUIRED: '개인정보 및 건강정보 처리 동의가 필요합니다.',
+    PUBLIC_CONSENT_REQUIRED: '공개 질문은 게시판 및 검색 노출 동의가 필요합니다.',
     INVALID_CATEGORY: '분류를 다시 선택해주세요.',
     TITLE_TOO_SHORT: '제목을 5자 이상 입력해주세요.',
     MESSAGE_TOO_SHORT: '질문 내용을 15자 이상 입력해주세요.',
@@ -68,6 +77,23 @@ function mergeBoardPosts(posts) {
     seen.add(key);
     return true;
   });
+}
+
+async function recordConsent(env, post, consent, identity, request) {
+  const store = env.BOARD_POSTS || env.SECURITY_STORE || null;
+  if (!store) return;
+
+  await store.put(`board:consent:${post.slug}`, JSON.stringify({
+    postSlug: post.slug,
+    visibility: post.visibility,
+    privacyConsent: consent.privacy,
+    sensitiveConsent: consent.sensitive,
+    publicPostingConsent: consent.publicPosting,
+    consentVersion: consent.version,
+    consentedAt: new Date().toISOString(),
+    clientKey: identity,
+    userAgent: safeText(request.headers.get('user-agent') || '', 220)
+  }), { expirationTtl: 60 * 60 * 24 * 365 });
 }
 
 export async function onRequestGet({ env }) {
@@ -111,7 +137,14 @@ export async function onRequestPost({ request, env }) {
       website: safeText(raw.website, 100)
     };
 
-    const invalid = validationError(input);
+    const consent = {
+      privacy: isAgreed(raw.privacy_consent),
+      sensitive: isAgreed(raw.sensitive_consent),
+      publicPosting: isAgreed(raw.public_consent),
+      version: safeText(raw.consent_version || CONSENT_VERSION, 40) || CONSENT_VERSION
+    };
+
+    const invalid = validationError(input, consent);
     if (invalid) return errorResponse(invalid, invalid === 'BOT_DETECTED' ? 403 : 400);
 
     const duplicateValue = `${identity}|${input.visibility}|${input.category}|${input.title}|${input.message}`;
@@ -120,6 +153,8 @@ export async function onRequestPost({ request, env }) {
     }
 
     const post = await createBoardPost(env, input);
+    await recordConsent(env, post, consent, identity, request);
+
     return json({
       ok: true,
       post: {
