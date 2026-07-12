@@ -1,5 +1,7 @@
 (function () {
   const CONSENT_VERSION = '2026-07-12-v1';
+  const ASSOCIATION_SHARE_NUMBER = '20260217401069';
+  const ECLEAN_URL = 'https://www.e-cleanins.or.kr/';
   const nativeFetch = window.fetch.bind(window);
 
   function qs(selector, root = document) {
@@ -57,6 +59,7 @@
       .site-compliance-notice{border-top:1px solid #e5e5e5;background:#f7f7f7}
       .site-compliance-inner{max-width:1180px;margin:0 auto;padding:24px 20px;color:#555;font-size:13px;line-height:1.75}
       .site-compliance-inner strong{display:block;margin-bottom:6px;color:#111;font-size:14px}
+      .site-compliance-registration{margin-top:10px;color:#333;font-weight:750}
       .site-compliance-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
       .site-compliance-links a{color:#111;font-weight:800;text-underline-offset:3px}
       .answer-compliance-note{margin-top:22px;padding:17px 18px;border:1px solid #e5e5e5;background:#fafafa;color:#555;font-size:13px;line-height:1.7}
@@ -132,7 +135,8 @@
         <div class="site-compliance-inner">
           <strong>보험정보 이용안내</strong>
           보험플레이의 게시글과 답변은 일반적인 보험정보 제공을 위한 것이며 특정 보험상품의 가입 권유, 보험계약 체결 또는 중개를 위한 설명이 아닙니다. 실제 보험료, 보장내용, 가입 가능 여부는 보험회사·상품·개인의 연령, 직업, 병력 및 인수 기준에 따라 달라질 수 있습니다. 기존 보험을 해지하거나 변경하기 전에는 상품설명서와 약관을 확인하고 등록된 보험모집종사자에게 설명을 받으시기 바랍니다.
-          <div class="site-compliance-links"><a href="/insurance-notice/">보험정보 이용안내</a><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></div>
+          <div class="site-compliance-registration">보험협회 공유번호: ${ASSOCIATION_SHARE_NUMBER}</div>
+          <div class="site-compliance-links"><a href="${ECLEAN_URL}" target="_blank" rel="noopener noreferrer">이클린보험서비스에서 정보 확인</a><a href="/insurance-notice/">보험정보 이용안내</a><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></div>
         </div>
       </section>
     `);
@@ -144,7 +148,7 @@
     if (!answer || qs('.answer-compliance-note', answer)) return;
 
     const note = createElement(`
-      <div class="answer-compliance-note">본 답변은 질문에 기재된 제한된 내용을 기준으로 제공되는 일반적인 정보입니다. 특정 보험상품의 가입 권유나 계약 체결을 위한 설명이 아니며, 보험 가입·변경·해지 전에는 해당 상품의 약관과 상품설명서를 확인해야 합니다.</div>
+      <div class="answer-compliance-note">본 답변은 질문에 기재된 제한된 내용을 기준으로 제공되는 일반적인 정보입니다. 특정 보험상품의 가입 권유나 계약 체결을 위한 설명이 아니며, 보험 가입·변경·해지 전에는 해당 상품의 약관과 상품설명서를 확인해야 합니다.<br/>보험협회 공유번호: ${ASSOCIATION_SHARE_NUMBER}</div>
     `);
     answer.appendChild(note);
   }
