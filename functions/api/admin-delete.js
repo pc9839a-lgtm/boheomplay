@@ -18,6 +18,10 @@ export async function onRequestPost({ request, env }) {
 
     const ok = await deleteBoardPost(env, slug);
     if (!ok) return json({ ok: false, error: '게시글을 찾을 수 없습니다.' }, 404);
+
+    const store = env.BOARD_POSTS || env.SECURITY_STORE || null;
+    if (store) await store.delete(`board:consent:${slug}`);
+
     return json({ ok: true });
   } catch (error) {
     return json({ ok: false, error: '삭제 요청을 처리하지 못했습니다.' }, 500);
