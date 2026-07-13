@@ -17,8 +17,19 @@ const REQUIRED_BLOCK = `
   </div>
 </section>`;
 
+function alreadyHasRequiredBlock(html) {
+  return html.includes(MARKER) || (
+    html.includes('본 답변은 일반적인 정보 제공 목적입니다.') &&
+    html.includes('내 보험 기준으로 바로 묻기') &&
+    html.includes('일반 보험 질문 문의') &&
+    html.includes('보험모집종사자: 김도윤') &&
+    html.includes('지에이코리아주식회사') &&
+    html.includes('20260217401069')
+  );
+}
+
 function injectRequiredBlock(html) {
-  if (html.includes(MARKER)) return html;
+  if (alreadyHasRequiredBlock(html)) return html;
   if (!html.includes('</article>')) return html;
   return html.replace('</article>', `${REQUIRED_BLOCK}</article>`);
 }
