@@ -1,13 +1,17 @@
 import { dailyBoardPosts20260713 } from '../_qa-2026-07-13.js';
+import { dailyBoardPosts20260714 } from '../_qa-2026-07-14.js';
 
 function mergeDaily(posts) {
   const seen = new Set();
-  return dailyBoardPosts20260713.concat(Array.isArray(posts) ? posts : []).filter((post) => {
-    const key = post.slug || post.id || post.href || post.title;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return dailyBoardPosts20260714
+    .concat(dailyBoardPosts20260713)
+    .concat(Array.isArray(posts) ? posts : [])
+    .filter((post) => {
+      const key = post.slug || post.id || post.href || post.title;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 export async function onRequest(context) {
