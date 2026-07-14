@@ -2,11 +2,12 @@ import { categories, questions, cases } from './_content.js';
 import { extraQuestions } from './_extra-qa.js';
 import { dailyQuestions20260713 } from './_qa-2026-07-13.js';
 import { dailyQuestions20260714 } from './_qa-2026-07-14.js';
+import { dailyQuestions20260715 } from './_qa-2026-07-15.js';
 import { lifeCompanies, insuranceProducts } from './_insurance-directory.js';
 import { listBoardPosts } from './_board.js';
 
 const SITE_URL = 'https://boheomplay.pagero.kr';
-const LAST_UPDATED = '2026-07-14';
+const LAST_UPDATED = '2026-07-15';
 const escXml = (value) => String(value).replace(/[&<>\"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[char]));
 const url = (path) => `${SITE_URL}${path}`;
 
@@ -41,6 +42,7 @@ export async function onRequest(context) {
     ...insuranceProducts.map((item) => ({ loc: url(`/product/${item.slug}`), priority: '0.8', changefreq: 'weekly' })),
     ...categories.map((item) => ({ loc: url(`/insurance/${item.slug}`), priority: '0.9', changefreq: 'weekly' })),
     ...cases.map((item) => ({ loc: url(`/case/${item.slug}`), priority: '0.8', changefreq: 'weekly' })),
+    ...dailyQuestions20260715.map((item) => ({ loc: url(`/q/${item.slug}`), priority: '0.8', changefreq: 'weekly' })),
     ...dailyQuestions20260714.map((item) => ({ loc: url(`/q/${item.slug}`), priority: '0.8', changefreq: 'weekly' })),
     ...dailyQuestions20260713.map((item) => ({ loc: url(`/q/${item.slug}`), priority: '0.8', changefreq: 'weekly' })),
     ...questions.map((item) => ({ loc: url(`/q/${item.slug}`), priority: '0.75', changefreq: 'weekly' })),
