@@ -1,9 +1,11 @@
 import { dailyBoardPosts20260713 } from '../_qa-2026-07-13.js';
 import { dailyBoardPosts20260714 } from '../_qa-2026-07-14.js';
+import { dailyBoardPosts20260715 } from '../_qa-2026-07-15.js';
 
 function mergeDaily(posts) {
   const seen = new Set();
-  return dailyBoardPosts20260714
+  return dailyBoardPosts20260715
+    .concat(dailyBoardPosts20260714)
     .concat(dailyBoardPosts20260713)
     .concat(Array.isArray(posts) ? posts : [])
     .filter((post) => {
