@@ -119,7 +119,7 @@
     wrap = document.createElement('div');
     wrap.id = 'boardMoreWrap';
     wrap.className = 'board-more-wrap';
-    wrap.innerHTML = '<button id="boardMoreButton" class="board-more-button" type="button">더보기 <span id="boardMoreCount"></span></button>';
+    wrap.innerHTML = '<button id="boardMoreButton" class="board-more-button" type="button">더보기</button>';
     const table = list.closest('.board-table') || list;
     table.insertAdjacentElement('afterend', wrap);
     return wrap;
@@ -141,12 +141,10 @@
 
     const wrap = ensureControls();
     const button = $('#boardMoreButton');
-    const count = $('#boardMoreCount');
     const remaining = Math.max(posts.length - visible.length, 0);
 
     if (wrap) wrap.hidden = remaining === 0;
     if (button) button.disabled = remaining === 0;
-    if (count) count.textContent = remaining > 0 ? `(${Math.min(PAGE_SIZE, remaining)}개 추가)` : '';
 
     if (observer) observer.observe(list, { childList: true });
   }
@@ -185,7 +183,6 @@
       .board-more-wrap[hidden]{display:none!important}
       .board-more-button{min-width:210px;height:56px;padding:0 28px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;font:inherit;font-size:16px;font-weight:900;cursor:pointer;transition:background .18s ease,color .18s ease,transform .18s ease}
       .board-more-button:hover{background:#111;color:#fff;transform:translateY(-2px)}
-      .board-more-button span{margin-left:5px;font-size:12px;font-weight:750;opacity:.65}
       @media(max-width:640px){.board-more-wrap{padding-top:22px}.board-more-button{width:100%;height:54px}}
     `;
     document.head.appendChild(style);
