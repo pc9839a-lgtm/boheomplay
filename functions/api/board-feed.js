@@ -1,4 +1,7 @@
 import { extraBoardPosts } from '../_extra-qa.js';
+import { dailyBoardPosts20260713 } from '../_qa-2026-07-13.js';
+import { dailyBoardPosts20260714 } from '../_qa-2026-07-14.js';
+import { dailyBoardPosts20260715 } from '../_qa-2026-07-15.js';
 
 const STORE_KEY = 'board:all-posts:v2';
 
@@ -8,7 +11,7 @@ function json(data, status = 200) {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store, no-cache, must-revalidate, max-age=0',
-      'x-board-feed-version': 'restore-v1'
+      'x-board-feed-version': 'restore-v2'
     }
   });
 }
@@ -70,9 +73,18 @@ export async function onRequestGet({ env }) {
     }
   }
 
+  const posts = mergePosts(
+    userPosts,
+    dailyBoardPosts20260715,
+    dailyBoardPosts20260714,
+    dailyBoardPosts20260713,
+    extraBoardPosts
+  );
+
   return json({
     ok: true,
     userPostCount: userPosts.length,
-    posts: mergePosts(userPosts, extraBoardPosts)
+    totalPostCount: posts.length,
+    posts
   });
 }
