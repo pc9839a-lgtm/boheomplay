@@ -72,7 +72,7 @@ function errorResponse(code, status = 400, headers = {}) {
 
 function mergeBoardPosts(posts) {
   const seen = new Set();
-  return extraBoardPosts.concat(posts).filter((post) => {
+  return (Array.isArray(posts) ? posts : []).concat(extraBoardPosts).filter((post) => {
     const key = post.slug || post.id || post.href || post.title;
     if (!key || seen.has(key)) return false;
     seen.add(key);
@@ -112,11 +112,11 @@ export async function onRequestGet({ env }) {
   try {
     const posts = await listBoardPosts(env, { publicOnly: true });
     return json({ ok: true, posts: mergeBoardPosts(posts) }, 200, {
-      'cache-control': 'public, max-age=15, s-maxage=30, stale-while-revalidate=60'
+      'cache-control': 'no-store, no-cache, must-revalidate, max-age=0'
     });
   } catch (error) {
     return json({ ok: true, posts: extraBoardPosts }, 200, {
-      'cache-control': 'public, max-age=15, s-maxage=30, stale-while-revalidate=60'
+      'cache-control': 'no-store, no-cache, must-revalidate, max-age=0'
     });
   }
 }
