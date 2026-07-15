@@ -1,4 +1,4 @@
-import { questions, renderQuestionPage, renderNotFound, htmlResponse } from '../_render.js';
+import { questions, categories, renderNotFound, htmlResponse } from '../_render.js';
 import { extraQuestions } from '../_extra-qa.js';
 import { dailyQuestions } from '../_daily-questions.js';
 import { renderUnifiedQuestionPage } from '../_unified-question.js';
@@ -24,6 +24,22 @@ function relatedFor(current) {
     })
     .slice(0, 6)
     .map((item) => ({ slug: item.slug, title: item.title }));
+}
+
+function normalizeBase(item) {
+  const summary = Array.isArray(item.summary) ? item.summary.filter(Boolean) : [];
+  const checks = Array.isArray(item.checks) ? item.checks.filter(Boolean) : [];
+  const category = categories.find((entry) => entry.slug === item.category)?.name || item.category || '보험정보';
+  return {
+    slug: item.slug,
+    title: item.title,
+    category,
+    question: `${item.title}\n\n${item.audience || '현재 보험을 확인하는 분'} 기준으로 어떤 내용을 먼저 확인해야 하는지 궁금합니다.`,
+    lead: summary.slice(0, 2).join('\n\n') || `${item.title}에 관한 일반적인 확인 기준을 살펴봅니다.`,
+    point: summary[0] || item.title,
+    bullets: checks.concat(summary.slice(1)).slice(0, 5),
+    close: summary[2] || '보험 가입·변경·해지 전에는 현재 계약과 약관, 개인 조건을 함께 확인해야 합니다.'
+  };
 }
 
 function normalizeExtra(item) {
@@ -64,16 +80,12 @@ export async function onRequest(context) {
   const slug = String(context.params.slug || '').trim();
 
   const daily = dailyQuestions.find((item) => item.slug === slug);
-  if (daily) {
-    return htmlResponse(renderUnifiedQuestionPage(normalizeDaily(daily), relatedFor(daily)));
-  }
+  if (daily) return htmlResponse(renderUnifiedQuestionPage(normalizeDaily(daily), relatedFor(daily)));
 
   const extra = extraQuestions.find((item) => item.slug === slug);
-  if (extra) {
-    return htmlResponse(renderUnifiedQuestionPage(normalizeExtra(extra), relatedFor(extra)));
-  }
+  if (extra) return htmlResponse(renderUnifiedQuestionPage(normalizeExtra(extra), relatedFor(extra)));
 
   const question = questions.find((item) => item.slug === slug);
   if (!question) return htmlResponse(renderNotFound(), 404);
-  return htmlResponse(renderQuestionPage(question));
+  return htmlResponse(renderUnifiedQuestionPage(normalizeBase(question), relatedFor(question)));
 }
