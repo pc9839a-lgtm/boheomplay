@@ -2,6 +2,7 @@ import { questions, categories, renderNotFound, htmlResponse } from '../_render.
 import { extraQuestions } from '../_extra-qa.js';
 import { dailyQuestions } from '../_daily-questions.js';
 import { renderUnifiedQuestionPage } from '../_unified-question.js';
+import { decodePreviewToken } from '../_preview-token.js';
 
 const KLIA = 'https://www.klia.or.kr/klia/company/member/list.do';
 
@@ -28,6 +29,13 @@ function relatedFor(current) {
 
 function preventDuplicateNotice(html) {
   return html.replace('</head>', '<style>.thread-page .answer-compliance-note{display:none!important}</style></head>');
+}
+
+function safeScriptJson(value) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
 function normalizeBase(item) {
@@ -84,8 +92,64 @@ function responseFor(item, normalized) {
   return htmlResponse(preventDuplicateNotice(renderUnifiedQuestionPage(normalized, relatedFor(item))));
 }
 
+function previewResponse(context) {
+  const url = new URL(context.request.url);
+  const data = decodePreviewToken(url.searchParams.get('d'));
+  const title = String(data?.title || '').trim().slice(0, 100);
+  const message = String(data?.message || '').trim().slice(0, 1800);
+  if (!data || !title || !message) return htmlResponse(renderNotFound(), 404);
+
+  const category = String(data.category || '기타').slice(0, 40);
+  const id = String(data.id || `local-${Date.now().toString(36)}`).slice(0, 80);
+  const item = {
+    slug: id,
+    title,
+    category,
+    question: message,
+    lead: '질문이 정상적으로 접수되었습니다. 아직 답변이 등록되지 않았습니다.',
+    point: '관리자 확인 후 답변이 등록되면 이 질문에서 확인할 수 있습니다.',
+    bullets: [
+      '질문 내용은 공개 게시 기준으로 접수되었습니다.',
+      '답변 전에는 특정 보험상품의 가입 가능 여부를 확정할 수 없습니다.',
+      '개인정보나 민감정보가 포함됐다면 관리자에게 삭제를 요청하세요.'
+    ],
+    close: '답변이 등록될 때까지 질문 내용을 다시 확인해 주세요.',
+    updatedAt: '방금 전'
+  };
+
+  let html = preventDuplicateNotice(renderUnifiedQuestionPage(item, relatedFor(item)))
+    .replace('content="index,follow,max-image-preview:large"', 'content="noindex,nofollow"');
+
+  const storedPost = {
+    id,
+    slug: id,
+    no: 'NEW',
+    category,
+    title,
+    message,
+    nickname: String(data.nickname || '익명').slice(0, 40),
+    status: '답변대기',
+    time: '방금 전',
+    href: `${url.pathname}${url.search}`,
+    answer: ''
+  };
+  const saveScript = `<script>try{const key='boheomplay_board_posts_v2';const post=${safeScriptJson(storedPost)};const old=JSON.parse(localStorage.getItem(key)||'[]');const list=Array.isArray(old)?old:[];localStorage.setItem(key,JSON.stringify([post,...list.filter(item=>(item.id||item.slug)!==post.id)].slice(0,30)));}catch(error){}</script>`;
+  html = html.replace('</body>', `${saveScript}</body>`);
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'no-store',
+      'x-robots-tag': 'noindex, nofollow, noarchive'
+    }
+  });
+}
+
 export async function onRequest(context) {
   const slug = String(context.params.slug || '').trim();
+
+  if (slug === 'local-preview') return previewResponse(context);
 
   const daily = dailyQuestions.find((item) => item.slug === slug);
   if (daily) return responseFor(daily, normalizeDaily(daily));
