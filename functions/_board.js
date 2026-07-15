@@ -1,8 +1,10 @@
 import { renderUnifiedQuestionPage } from './_unified-question.js';
 
 const INDEX_KEY = 'board:index';
+const LIST_KEY = 'board:posts:v2';
 const POST_PREFIX = 'board:post:';
 const MAX_LIST = 100;
+const BASE_NO = 1017;
 
 const CATEGORY_PREFIX = {
   '실비보험': 'silbi',
@@ -100,6 +102,65 @@ function displayTime(createdAt) {
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
 }
 
+function normalizeStoredPosts(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  return value
+    .filter((post) => post && typeof post === 'object' && post.slug && !post.deleted)
+    .filter((post) => {
+      if (seen.has(post.slug)) return false;
+      seen.add(post.slug);
+      return true;
+    })
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, MAX_LIST);
+}
+
+async function recoverStoredPosts(kv) {
+  const indexedSlugs = await readJson(kv, INDEX_KEY, []);
+  const slugs = Array.isArray(indexedSlugs) ? indexedSlugs.filter(Boolean) : [];
+
+  try {
+    const listed = await kv.list({ prefix: POST_PREFIX, limit: 1000 });
+    for (const key of listed.keys || []) {
+      const slug = String(key.name || '').slice(POST_PREFIX.length);
+      if (slug && !slugs.includes(slug)) slugs.push(slug);
+    }
+  } catch (error) {
+    // Index-based recovery still works when list is unavailable.
+  }
+
+  const posts = [];
+  for (const slug of slugs.slice(0, MAX_LIST)) {
+    const post = await readJson(kv, postKey(slug), null);
+    if (post && !post.deleted) posts.push(post);
+  }
+  return normalizeStoredPosts(posts);
+}
+
+async function readStoredPosts(kv) {
+  const stored = normalizeStoredPosts(await readJson(kv, LIST_KEY, []));
+  if (stored.length) return stored;
+
+  const recovered = await recoverStoredPosts(kv);
+  if (recovered.length) {
+    try {
+      await writeJson(kv, LIST_KEY, recovered);
+      await writeJson(kv, INDEX_KEY, recovered.map((post) => post.slug));
+    } catch (error) {
+      // Reading must remain available even if repair writes fail.
+    }
+  }
+  return recovered;
+}
+
+async function persistStoredPosts(kv, posts) {
+  const normalized = normalizeStoredPosts(posts);
+  await writeJson(kv, LIST_KEY, normalized);
+  await writeJson(kv, INDEX_KEY, normalized.map((post) => post.slug));
+  return normalized;
+}
+
 function publicPost(post) {
   return {
     id: post.slug,
@@ -143,14 +204,14 @@ export async function createBoardPost(env, input) {
   if (!title || !message) throw new Error('INVALID_POST');
   if (visibility === 'private' && (!privateName || !privatePhone)) throw new Error('PRIVATE_CONTACT_REQUIRED');
 
+  const currentPosts = await readStoredPosts(kv);
+  const maxNo = currentPosts.reduce((max, post) => Math.max(max, Number(post.no) || 0), BASE_NO);
   const slug = makeSlug(category);
   const createdAt = new Date().toISOString();
-  const index = await readJson(kv, INDEX_KEY, []);
-  const no = 1000 + index.length + 1;
 
   const post = {
     slug,
-    no,
+    no: maxNo + 1,
     visibility,
     category,
     title,
@@ -165,15 +226,18 @@ export async function createBoardPost(env, input) {
   };
 
   await writeJson(kv, postKey(slug), post);
-  const nextIndex = [slug, ...index.filter((item) => item !== slug)].slice(0, MAX_LIST);
-  await writeJson(kv, INDEX_KEY, nextIndex);
+  await persistStoredPosts(kv, [post, ...currentPosts]);
   return post;
 }
 
 export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const post = await readJson(kv, postKey(slug), null);
+  let post = await readJson(kv, postKey(slug), null);
+  if (!post) {
+    const posts = await readStoredPosts(kv);
+    post = posts.find((item) => item.slug === slug) || null;
+  }
   if (!post || post.deleted) return null;
   if (!includePrivate && post.visibility === 'private') return null;
   return post;
@@ -182,39 +246,50 @@ export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
 export async function listBoardPosts(env, { publicOnly = true } = {}) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const index = await readJson(kv, INDEX_KEY, []);
-  const posts = [];
-
-  for (const slug of index.slice(0, MAX_LIST)) {
-    const post = await readJson(kv, postKey(slug), null);
-    if (!post || post.deleted) continue;
-    if (publicOnly && post.visibility === 'private') continue;
-    posts.push(publicOnly ? publicPost(post) : adminPost(post));
-  }
-
-  return posts;
+  const posts = await readStoredPosts(kv);
+  return posts
+    .filter((post) => !(publicOnly && post.visibility === 'private'))
+    .map((post) => publicOnly ? publicPost(post) : adminPost(post));
 }
 
 export async function answerBoardPost(env, slug, answer) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const post = await readJson(kv, postKey(slug), null);
+  const posts = await readStoredPosts(kv);
+  const index = posts.findIndex((item) => item.slug === slug);
+  let post = index >= 0 ? posts[index] : await readJson(kv, postKey(slug), null);
   if (!post || post.deleted) return null;
-  post.answer = bodyClean(answer, 3000);
-  post.answeredAt = new Date().toISOString();
+
+  post = {
+    ...post,
+    answer: bodyClean(answer, 3000),
+    answeredAt: new Date().toISOString()
+  };
   post.updatedAt = post.answeredAt;
+
+  const nextPosts = index >= 0
+    ? posts.map((item, itemIndex) => itemIndex === index ? post : item)
+    : [post, ...posts];
+
   await writeJson(kv, postKey(slug), post);
+  await persistStoredPosts(kv, nextPosts);
   return post;
 }
 
 export async function deleteBoardPost(env, slug) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const post = await readJson(kv, postKey(slug), null);
+  const posts = await readStoredPosts(kv);
+  const post = posts.find((item) => item.slug === slug) || await readJson(kv, postKey(slug), null);
   if (!post) return false;
-  post.deleted = true;
-  post.updatedAt = new Date().toISOString();
-  await writeJson(kv, postKey(slug), post);
+
+  const deletedPost = {
+    ...post,
+    deleted: true,
+    updatedAt: new Date().toISOString()
+  };
+  await writeJson(kv, postKey(slug), deletedPost);
+  await persistStoredPosts(kv, posts.filter((item) => item.slug !== slug));
   return true;
 }
 
