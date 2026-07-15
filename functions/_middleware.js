@@ -8,7 +8,10 @@ const NOTICE='<section class="site-compliance-notice"><div class="site-complianc
 const CSP=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","frame-src 'none'","form-action 'self'","img-src 'self' data: https:","font-src 'self' data: https://cdn.jsdelivr.net","style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net","script-src 'self' 'unsafe-inline'","connect-src 'self' https://script.google.com https://script.googleusercontent.com","manifest-src 'self'","worker-src 'none'",'upgrade-insecure-requests'].join('; ');
 
 function patchHtml(html){
-  let out=html.replaceAll('https://boheomplay.pages.dev',SITE).replaceAll(`${SITE}/og-image.jpg`,OG);
+  let out=html
+    .replaceAll('https://boheomplay.pages.dev',SITE)
+    .replaceAll(`${SITE}/og-image.jpg`,OG)
+    .replaceAll('/assets/js/config.js?v=20260710-center-sections','/assets/js/config.js?v=20260715-board-router');
   if(!out.includes('property="og:image"')) out=out.replace('</head>',`<meta property="og:image" content="${OG}"/><meta property="og:image:secure_url" content="${OG}"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta property="og:image:type" content="image/jpeg"/><meta name="twitter:image" content="${OG}"/>${CORE_SCRIPTS}${BOARD_SCRIPT}</head>`);
   else {
     if(!out.includes('/assets/js/agent-info.js')) out=out.replace('</head>',`${CORE_SCRIPTS}</head>`);
