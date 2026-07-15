@@ -1,4 +1,4 @@
-const MARKER = 'maintenance:user-board-posts-purged:2026-07-15-v1';
+const MARKER = 'maintenance:user-board-posts-purged:2026-07-15-v2';
 
 export async function purgeUserBoardPostsOnce(env) {
   const store = env.BOARD_POSTS || env.SECURITY_STORE || null;
