@@ -9,110 +9,34 @@ function mergeDaily(posts) {
     .concat(dailyBoardPosts20260714)
     .concat(dailyBoardPosts20260713)
     .filter((post) => {
-      const key = post.slug || post.id || post.href || post.title;
+      const key = post?.slug || post?.id || post?.href || post?.title;
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
 }
 
-function clean(value, max = 1000) {
-  return String(value || '').trim().slice(0, max);
-}
-
-function encodePreview(value) {
-  const bytes = new TextEncoder().encode(JSON.stringify(value));
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function fallbackPost(input = {}) {
-  const isPrivate = input.visibility === 'private';
-  const id = `local-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
-  const category = clean(input.category || '기타', 40);
-  const title = isPrivate ? '비공개 질문입니다.' : clean(input.title, 100);
-  const message = isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : clean(input.message, 1800);
-  const nickname = isPrivate ? '비공개' : clean(input.nickname || '익명', 40);
-  const token = isPrivate ? '' : encodePreview({ id, category, title, message, nickname });
-
-  return {
-    id,
-    slug: id,
-    no: 'NEW',
-    category,
-    title,
-    message,
-    nickname,
-    status: '답변대기',
-    time: '방금 전',
-    href: isPrivate ? '' : `/q/local-preview?d=${encodeURIComponent(token)}`,
-    answer: ''
-  };
-}
-
-function fallbackResponse(input) {
-  return new Response(JSON.stringify({
-    ok: true,
-    fallback: true,
-    post: fallbackPost(input)
-  }), {
-    status: 201,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store'
-    }
-  });
-}
-
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  const isBoardPost = context.request.method === 'POST' && url.pathname === '/api/board-posts';
-  let postInput = null;
-
-  if (isBoardPost) {
-    try {
-      postInput = await context.request.clone().json();
-    } catch (error) {
-      postInput = {};
-    }
-  }
 
   try {
     if (!context.env.BOARD_POSTS && context.env.SECURITY_STORE) {
       context.env.BOARD_POSTS = context.env.SECURITY_STORE;
     }
   } catch (error) {
-    // Continue and use the fallback response when storage is unavailable.
+    // The endpoint itself returns the real storage configuration error.
   }
 
-  let response;
-  try {
-    response = await context.next();
-  } catch (error) {
-    if (isBoardPost) return fallbackResponse(postInput);
-    throw error;
-  }
+  const response = await context.next();
 
-  if (isBoardPost) {
-    if (!response.ok) return fallbackResponse(postInput);
-    try {
-      const data = await response.clone().json();
-      if (!data || data.ok !== true || !data.post) return fallbackResponse(postInput);
-      if (postInput?.visibility !== 'private' && !data.post.href) return fallbackResponse(postInput);
-    } catch (error) {
-      return fallbackResponse(postInput);
-    }
-    return response;
-  }
-
+  // Never replace POST failures with a fake success response.
   if (context.request.method !== 'GET' || url.pathname !== '/api/board-posts') {
     return response;
   }
 
   try {
     const data = await response.clone().json();
-    if (!data || data.ok !== true) return response;
+    if (!response.ok || !data || data.ok !== true) return response;
 
     const headers = new Headers(response.headers);
     headers.set('content-type', 'application/json; charset=utf-8');
