@@ -6,7 +6,7 @@ window.APP_CONFIG = {
 (function loadQuestionEnhancements(){
   [
     '/assets/js/consent-all.js?v=20260715-v2',
-    '/assets/js/board-router.js?v=20260715-v2'
+    '/assets/js/board-router.js?v=20260715-v3'
   ].forEach((src)=>{
     if(document.querySelector(`script[src^="${src.split('?')[0]}"]`)) return;
     const script=document.createElement('script');
