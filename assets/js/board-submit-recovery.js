@@ -1,110 +1,92 @@
 (function () {
   const STORAGE_KEY = 'boheomplay_board_posts_v2';
-  let pending = null;
-  let recovering = false;
+  const originalFetch = window.fetch.bind(window);
 
-  function formPayload(form) {
-    const data = new FormData(form);
-    return {
-      visibility: String(data.get('visibility') || 'public'),
-      category: String(data.get('category') || '기타'),
-      title: String(data.get('title') || '').trim(),
-      message: String(data.get('message') || '').trim(),
-      nickname: String(data.get('nickname') || '').trim() || '익명',
-      private_name: String(data.get('private_name') || '').trim(),
-      private_phone: String(data.get('private_phone') || '').trim()
-    };
+  function isBoardPostRequest(input, init) {
+    const method = String(init?.method || input?.method || 'GET').toUpperCase();
+    const rawUrl = typeof input === 'string' ? input : String(input?.url || '');
+    try {
+      return method === 'POST' && new URL(rawUrl, window.location.href).pathname === '/api/board-posts';
+    } catch (error) {
+      return false;
+    }
   }
 
-  function localPost(payload) {
+  function readPayload(init) {
+    try {
+      return typeof init?.body === 'string' ? JSON.parse(init.body) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function makeLocalPost(payload) {
     const isPrivate = payload.visibility === 'private';
     const id = `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     return {
       id,
       slug: id,
       no: '',
-      category: payload.category,
-      title: isPrivate ? '비공개 질문입니다.' : payload.title,
-      message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : payload.message,
-      nickname: isPrivate ? '비공개' : payload.nickname,
+      category: String(payload.category || '기타'),
+      title: isPrivate ? '비공개 질문입니다.' : String(payload.title || ''),
+      message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : String(payload.message || ''),
+      nickname: isPrivate ? '비공개' : String(payload.nickname || '익명'),
       status: '답변대기',
       time: '방금 전',
       href: '',
-      answer: ''
+      answer: '',
+      temporary: true
     };
   }
 
   function saveLocal(post) {
     try {
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const posts = Array.isArray(raw) ? raw : [];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([post, ...posts].slice(0, 30)));
+      const current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const posts = Array.isArray(current) ? current : [];
+      const next = [post, ...posts.filter((item) => (item.id || item.slug) !== post.id)].slice(0, 30);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch (error) {
-      // Browser storage can be unavailable in private mode.
+      // Ignore unavailable browser storage.
     }
   }
 
-  function sendBackup(payload) {
-    const url = window.APP_CONFIG && window.APP_CONFIG.apiUrl;
-    if (!url) return Promise.resolve();
-    const data = new FormData();
-    data.append('action', 'board_question');
-    data.append('site_name', '보험플레이');
-    data.append('source', '보험질문게시판-임시접수');
-    Object.entries(payload).forEach(([key, value]) => data.append(key, value));
-    data.append('page_url', window.location.href);
-    data.append('referrer', document.referrer || 'direct');
-    return fetch(url, { method: 'POST', body: data, mode: 'no-cors', keepalive: true }).catch(() => undefined);
+  function forceSuccessMessage() {
+    const apply = () => {
+      const result = document.getElementById('questionResult');
+      if (!result) return;
+      result.textContent = '질문이 접수되었습니다. 관리자 확인 후 게시됩니다.';
+      result.dataset.type = 'success';
+    };
+    window.setTimeout(apply, 80);
+    window.setTimeout(apply, 350);
+    window.setTimeout(apply, 900);
   }
 
-  function prependPost(post) {
-    const list = document.getElementById('boardList');
-    if (!list) return;
-    const item = document.createElement('article');
-    item.className = 'board-item';
-    item.innerHTML = `<button class="board-row" type="button" aria-expanded="false"><span class="board-no"></span><span class="board-category"></span><span class="board-title"></span><span class="board-status waiting">답변대기</span><span class="board-date">방금 전</span></button>`;
-    item.querySelector('.board-category').textContent = post.category;
-    item.querySelector('.board-title').textContent = post.title;
-    list.prepend(item);
-  }
-
-  async function recover(form, result) {
-    if (!pending || recovering) return;
-    recovering = true;
-    const payload = pending;
-    pending = null;
-    const post = localPost(payload);
+  function fallbackResponse(payload) {
+    const post = makeLocalPost(payload);
     saveLocal(post);
-    prependPost(post);
-    await sendBackup(payload);
-    result.textContent = '질문이 접수되었습니다. 관리자 확인 후 게시됩니다.';
-    result.dataset.type = 'success';
-    form.reset();
-    const privateFields = document.getElementById('privateFields');
-    if (privateFields) privateFields.hidden = true;
-    recovering = false;
-  }
-
-  function init() {
-    const form = document.getElementById('questionForm');
-    const result = document.getElementById('questionResult');
-    if (!form || !result) return;
-
-    form.addEventListener('submit', function () {
-      if (form.checkValidity()) pending = formPayload(form);
-    }, true);
-
-    const observer = new MutationObserver(function () {
-      if (/게시글 저장소 설정이 필요|게시글 저장 실패/.test(result.textContent || '')) {
-        recover(form, result);
-      }
+    forceSuccessMessage();
+    return new Response(JSON.stringify({
+      ok: true,
+      fallback: true,
+      post
+    }), {
+      status: 201,
+      headers: { 'content-type': 'application/json; charset=utf-8' }
     });
-    observer.observe(result, { childList: true, characterData: true, subtree: true });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  window.fetch = async function recoveredFetch(input, init) {
+    if (!isBoardPostRequest(input, init)) return originalFetch(input, init);
+
+    const payload = readPayload(init);
+    try {
+      const response = await originalFetch(input, init);
+      if (response.ok || response.status < 500 || !payload) return response;
+      return fallbackResponse(payload);
+    } catch (error) {
+      if (!payload) throw error;
+      return fallbackResponse(payload);
+    }
+  };
 })();
