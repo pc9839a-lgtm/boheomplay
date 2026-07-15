@@ -1,10 +1,11 @@
 import { renderUnifiedQuestionPage } from './_unified-question.js';
 
 const POST_PREFIX = 'board:post:';
-const LEGACY_LIST_KEY = 'board:posts:v2';
-const LEGACY_INDEX_KEY = 'board:index';
+const LIST_KEY = 'board:posts:v2';
+const INDEX_KEY = 'board:index';
 const MAX_LIST = 100;
 const BASE_NO = 1017;
+const TOMBSTONE_TTL = 60 * 60 * 24 * 365;
 
 const CATEGORY_PREFIX = {
   '실비보험': 'silbi',
@@ -60,9 +61,9 @@ function postKey(slug) {
 }
 
 async function readJson(kv, key, fallback) {
-  const raw = await kv.get(key);
-  if (!raw) return fallback;
   try {
+    const raw = await kv.get(key);
+    if (!raw) return fallback;
     return JSON.parse(raw);
   } catch (error) {
     return fallback;
@@ -90,6 +91,100 @@ function makeSlug(category) {
   return `${prefix}-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
+function timestamp(post) {
+  return new Date(post?.updatedAt || post?.createdAt || 0).getTime() || 0;
+}
+
+function mergeStoredPosts(...groups) {
+  const bySlug = new Map();
+
+  for (const post of groups.flat()) {
+    if (!post || typeof post !== 'object' || !post.slug) continue;
+    const existing = bySlug.get(post.slug);
+    if (!existing || timestamp(post) >= timestamp(existing)) bySlug.set(post.slug, post);
+  }
+
+  return Array.from(bySlug.values())
+    .filter((post) => !post.deleted)
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, MAX_LIST);
+}
+
+async function readIndexedPosts(kv) {
+  const slugs = await readJson(kv, INDEX_KEY, []);
+  if (!Array.isArray(slugs) || !slugs.length) return [];
+
+  const posts = [];
+  for (const slug of slugs.slice(0, MAX_LIST)) {
+    const post = await readJson(kv, postKey(slug), null);
+    if (post) posts.push(post);
+  }
+  return posts;
+}
+
+async function readDirectPosts(kv) {
+  const names = [];
+  let cursor;
+  let pages = 0;
+
+  do {
+    const page = await kv.list({
+      prefix: POST_PREFIX,
+      limit: 1000,
+      ...(cursor ? { cursor } : {})
+    });
+
+    for (const key of page.keys || []) {
+      if (key?.name) names.push(key.name);
+    }
+
+    cursor = page.list_complete ? '' : page.cursor;
+    pages += 1;
+  } while (cursor && pages < 5);
+
+  const posts = [];
+  for (let index = 0; index < names.length; index += 20) {
+    const chunk = names.slice(index, index + 20);
+    const values = await Promise.all(chunk.map((name) => readJson(kv, name, null)));
+    posts.push(...values.filter(Boolean));
+  }
+  return posts;
+}
+
+async function readStoredPosts(kv) {
+  const listPosts = await readJson(kv, LIST_KEY, []);
+
+  let indexedPosts = [];
+  let directPosts = [];
+
+  try {
+    indexedPosts = await readIndexedPosts(kv);
+  } catch (error) {
+    indexedPosts = [];
+  }
+
+  try {
+    directPosts = await readDirectPosts(kv);
+  } catch (error) {
+    directPosts = [];
+  }
+
+  return mergeStoredPosts(
+    Array.isArray(listPosts) ? listPosts : [],
+    indexedPosts,
+    directPosts
+  );
+}
+
+async function persistStoredPosts(kv, posts) {
+  const normalized = mergeStoredPosts(posts);
+  await Promise.all([
+    writeJson(kv, LIST_KEY, normalized),
+    writeJson(kv, INDEX_KEY, normalized.map((post) => post.slug))
+  ]);
+  return normalized;
+}
+
 function displayTime(createdAt) {
   if (!createdAt) return '방금 전';
   const diff = Math.max(0, Date.now() - new Date(createdAt).getTime());
@@ -100,76 +195,6 @@ function displayTime(createdAt) {
   if (hours < 24) return `${hours}시간 전`;
   const date = new Date(createdAt);
   return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function normalizePosts(value) {
-  if (!Array.isArray(value)) return [];
-  const seen = new Set();
-  return value
-    .filter((post) => post && typeof post === 'object' && post.slug && !post.deleted)
-    .filter((post) => {
-      if (seen.has(post.slug)) return false;
-      seen.add(post.slug);
-      return true;
-    })
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-    .slice(0, MAX_LIST);
-}
-
-async function listDirectPosts(kv) {
-  const keyNames = [];
-  let cursor;
-  let pages = 0;
-
-  do {
-    const page = await kv.list({ prefix: POST_PREFIX, limit: 1000, ...(cursor ? { cursor } : {}) });
-    for (const key of page.keys || []) {
-      if (key?.name) keyNames.push(key.name);
-    }
-    cursor = page.list_complete ? '' : page.cursor;
-    pages += 1;
-  } while (cursor && pages < 5);
-
-  const posts = [];
-  for (let index = 0; index < keyNames.length; index += 20) {
-    const chunk = keyNames.slice(index, index + 20);
-    const values = await Promise.all(chunk.map((key) => readJson(kv, key, null)));
-    posts.push(...values.filter(Boolean));
-  }
-  return normalizePosts(posts);
-}
-
-async function readLegacyPosts(kv) {
-  const fromList = normalizePosts(await readJson(kv, LEGACY_LIST_KEY, []));
-  if (fromList.length) return fromList;
-
-  const slugs = await readJson(kv, LEGACY_INDEX_KEY, []);
-  if (!Array.isArray(slugs)) return [];
-  const posts = [];
-  for (const slug of slugs.slice(0, MAX_LIST)) {
-    const post = await readJson(kv, postKey(slug), null);
-    if (post) posts.push(post);
-  }
-  return normalizePosts(posts);
-}
-
-async function readStoredPosts(kv) {
-  try {
-    const direct = await listDirectPosts(kv);
-    if (direct.length) return direct;
-  } catch (error) {
-    // Legacy fallback below.
-  }
-  return readLegacyPosts(kv);
-}
-
-async function verifyStoredPost(kv, slug) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const stored = await readJson(kv, postKey(slug), null);
-    if (stored && stored.slug === slug) return stored;
-    await new Promise((resolve) => setTimeout(resolve, 40 * (attempt + 1)));
-  }
-  return null;
 }
 
 function publicPost(post) {
@@ -237,15 +262,20 @@ export async function createBoardPost(env, input) {
   };
 
   await writeJson(kv, postKey(slug), post);
-  const verified = await verifyStoredPost(kv, slug);
-  if (!verified) throw new Error('BOARD_STORE_WRITE_FAILED');
-  return verified;
+  await persistStoredPosts(kv, [post, ...currentPosts]);
+  return post;
 }
 
 export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const post = await readJson(kv, postKey(slug), null);
+
+  let post = await readJson(kv, postKey(slug), null);
+  if (!post) {
+    const posts = await readStoredPosts(kv);
+    post = posts.find((item) => item.slug === slug) || null;
+  }
+
   if (!post || post.deleted) return null;
   if (!includePrivate && post.visibility === 'private') return null;
   return post;
@@ -254,6 +284,7 @@ export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
 export async function listBoardPosts(env, { publicOnly = true } = {}) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
+
   const posts = await readStoredPosts(kv);
   return posts
     .filter((post) => !(publicOnly && post.visibility === 'private'))
@@ -263,29 +294,47 @@ export async function listBoardPosts(env, { publicOnly = true } = {}) {
 export async function answerBoardPost(env, slug, answer) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const post = await readJson(kv, postKey(slug), null);
+
+  const currentPosts = await readStoredPosts(kv);
+  let post = await readJson(kv, postKey(slug), null);
+  if (!post) post = currentPosts.find((item) => item.slug === slug) || null;
   if (!post || post.deleted) return null;
 
+  const answeredAt = new Date().toISOString();
   const updated = {
     ...post,
     answer: bodyClean(answer, 3000),
-    answeredAt: new Date().toISOString()
+    answeredAt,
+    updatedAt: answeredAt
   };
-  updated.updatedAt = updated.answeredAt;
+
   await writeJson(kv, postKey(slug), updated);
+  await persistStoredPosts(kv, [updated, ...currentPosts.filter((item) => item.slug !== slug)]);
   return updated;
 }
 
 export async function deleteBoardPost(env, slug) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
-  const post = await readJson(kv, postKey(slug), null);
+
+  const currentPosts = await readStoredPosts(kv);
+  let post = await readJson(kv, postKey(slug), null);
+  if (!post) post = currentPosts.find((item) => item.slug === slug) || null;
   if (!post) return false;
-  await kv.delete(postKey(slug));
+
+  const tombstone = {
+    ...post,
+    deleted: true,
+    updatedAt: new Date().toISOString()
+  };
+
+  await writeJson(kv, postKey(slug), tombstone, { expirationTtl: TOMBSTONE_TTL });
+  await persistStoredPosts(kv, currentPosts.filter((item) => item.slug !== slug));
+
   try {
     await kv.delete(`board:consent:${slug}`);
   } catch (error) {
-    // Question deletion remains successful if consent cleanup fails.
+    // The question remains deleted if consent cleanup fails.
   }
   return true;
 }
