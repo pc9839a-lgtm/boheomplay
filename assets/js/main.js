@@ -16,7 +16,8 @@
 
   let activeFilter = '전체';
   let openPostId = '';
-  let posts = readInitialPosts();
+  const initialPosts = readInitialPosts();
+  let posts = initialPosts.slice();
 
   init();
 
@@ -124,9 +125,9 @@
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok || !Array.isArray(data.posts)) {
-        throw new Error(data.error || '질문 목록을 불러오지 못했습니다.');
+        throw new Error(formatServerError(data, response.status));
       }
-      posts = dedupePosts(data.posts);
+      posts = dedupePosts([...data.posts, ...initialPosts]);
       renderBoard();
     } catch (error) {
       console.error('[boheomplay] board list failed', error);
@@ -143,13 +144,13 @@
         return;
       }
 
-      const formData = new FormData(questionForm);
-      if (String(formData.get('website') || '').trim()) return;
-
       if (Date.now() - openedAt < 1200) {
         setResult('잠시 후 다시 등록해주세요.', 'error');
         return;
       }
+
+      const formData = new FormData(questionForm);
+      if (String(formData.get('website') || '').trim()) return;
 
       const payload = buildPayload(formData);
       const submitButton = questionForm.querySelector('button[type="submit"]');
@@ -166,8 +167,9 @@
           body: JSON.stringify(payload)
         });
         const data = await response.json().catch(() => ({}));
+
         if (!response.ok || !data.ok || data.stored !== true || !data.post) {
-          throw new Error(data.error || '질문 저장에 실패했습니다.');
+          throw new Error(formatServerError(data, response.status));
         }
 
         questionForm.reset();
@@ -206,8 +208,22 @@
       message: String(formData.get('message') || '').trim(),
       nickname: String(formData.get('nickname') || '').trim() || '익명',
       private_name: String(formData.get('private_name') || '').trim(),
-      private_phone: String(formData.get('private_phone') || '').trim()
+      private_phone: String(formData.get('private_phone') || '').trim(),
+      website: String(formData.get('website') || '').trim(),
+      privacy_consent: Boolean($('#privacyConsent', questionForm)?.checked),
+      sensitive_consent: Boolean($('#sensitiveConsent', questionForm)?.checked),
+      public_consent: Boolean($('#publicConsent', questionForm)?.checked),
+      consent_version: '2026-07-12-v1'
     };
+  }
+
+  function formatServerError(data, status) {
+    const parts = [];
+    if (data?.error) parts.push(String(data.error));
+    if (data?.code) parts.push(`코드: ${data.code}`);
+    if (data?.detail) parts.push(`상세: ${data.detail}`);
+    if (!parts.length) parts.push(`질문 저장에 실패했습니다. HTTP ${status || 0}`);
+    return parts.join(' / ');
   }
 
   async function sendBackupToAppsScript(payload) {
@@ -217,7 +233,7 @@
       apiData.append('action', 'board_question');
       apiData.append('site_name', '보험플레이');
       apiData.append('source', '보험질문게시판');
-      Object.entries(payload).forEach(([key, value]) => apiData.append(key, value));
+      Object.entries(payload).forEach(([key, value]) => apiData.append(key, String(value)));
       apiData.append('page_url', window.location.href);
       apiData.append('referrer', document.referrer || 'direct');
       await submitWithTimeout(config.apiUrl, apiData, config.submitTimeout || 30000);
