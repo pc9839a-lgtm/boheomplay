@@ -2,7 +2,6 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const config = window.APP_CONFIG || {};
-  const STORAGE_KEY = 'boheomplay_board_posts_v2';
   const openedAt = Date.now();
 
   const menuButton = $('[data-menu-toggle]');
@@ -14,67 +13,10 @@
   const privateFields = $('#privateFields');
   const privateNameInput = $('#privateNameInput');
   const privatePhoneInput = $('#privatePhoneInput');
+
   let activeFilter = '전체';
   let openPostId = '';
-  let remotePosts = [];
-
-  const seedPosts = [
-    {
-      id: 'seed-1007',
-      no: 1007,
-      category: '실비보험',
-      title: '실비보험료가 2배 가까이 올랐는데 계속 유지해야 하나요?',
-      message: '예전 실비라 보장은 괜찮다고 들었는데 보험료가 갑자기 부담될 정도로 올랐습니다. 해지하면 다시 가입이 어려울까 봐 고민입니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '방금 전',
-      href: '/q/silbi-premium-increase-cancel'
-    },
-    {
-      id: 'seed-1006',
-      no: 1006,
-      category: '유병자보험',
-      title: '당뇨약 복용 중인데 일반보험도 가입 가능한가요?',
-      message: '당뇨약은 계속 복용 중이고 최근 입원이나 수술은 없습니다. 유병자보험만 가능한지, 일반보험 심사도 볼 수 있는지 궁금합니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '3분 전',
-      href: '/q/diabetes-insurance-available'
-    },
-    {
-      id: 'seed-1005',
-      no: 1005,
-      category: '부모님 보험',
-      title: '60대 부모님 보험료가 너무 비싼데 어디부터 줄여야 하나요?',
-      message: '실비는 있는 것 같고 암보험, 종합보험이 여러 개 있습니다. 매달 보험료가 부담돼서 줄이고 싶은데 해지했다가 손해 볼까 봐 걱정됩니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '8분 전',
-      href: '/q/parents-insurance-review-order'
-    },
-    {
-      id: 'seed-1004',
-      no: 1004,
-      category: '암보험',
-      title: '30대 암보험 진단비 3천만 원이면 부족한가요?',
-      message: '기존 보험에 암진단비가 조금 들어 있는데 충분한지 모르겠습니다. 가족력이 조금 있어서 추가로 준비해야 할지 궁금합니다.',
-      nickname: '익명',
-      status: '답변완료',
-      time: '12분 전',
-      href: '/q/cancer-insurance-30s-needed'
-    },
-    {
-      id: 'seed-1003',
-      no: 1003,
-      category: '보험료',
-      title: '월 보험료가 35만 원인데 줄여도 되는 특약이 있을까요?',
-      message: '실비, 암보험, 종합보험을 합치니 월 보험료가 너무 큽니다. 해지는 무섭고 계속 내기는 부담인데 어떤 순서로 봐야 할까요?',
-      nickname: '익명',
-      status: '답변완료',
-      time: '20분 전',
-      href: '/q/reduce-insurance-premium'
-    }
-  ];
+  let posts = readInitialPosts();
 
   init();
 
@@ -151,16 +93,43 @@
     return questionForm?.querySelector('input[name="visibility"]:checked')?.value || 'public';
   }
 
+  function readInitialPosts() {
+    if (!boardList) return [];
+    return $$('.board-item', boardList).map((item) => {
+      const row = $('.board-row', item);
+      if (!row) return null;
+      const href = row.tagName === 'A' ? row.getAttribute('href') || '' : '';
+      return {
+        id: href || $('.board-title', item)?.textContent || '',
+        slug: '',
+        no: $('.board-no', item)?.textContent || '',
+        category: $('.board-category', item)?.textContent || '기타',
+        title: $('.board-title', item)?.textContent || '',
+        message: $('.board-detail > .detail-text', item)?.textContent || '',
+        answer: $('.answer-block .detail-text:not(.answer-empty)', item)?.textContent || '',
+        nickname: '익명',
+        status: $('.board-status', item)?.textContent || '답변대기',
+        time: $('.board-date', item)?.textContent || '',
+        href
+      };
+    }).filter(Boolean);
+  }
+
   async function loadRemotePosts() {
     try {
-      const response = await fetch('/api/board-posts', { method: 'GET' });
-      if (!response.ok) throw new Error('board api failed');
-      const data = await response.json();
-      if (!data.ok || !Array.isArray(data.posts)) return;
-      remotePosts = data.posts;
+      const response = await fetch('/api/board-posts', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: { accept: 'application/json' }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok || !Array.isArray(data.posts)) {
+        throw new Error(data.error || '질문 목록을 불러오지 못했습니다.');
+      }
+      posts = dedupePosts(data.posts);
       renderBoard();
     } catch (error) {
-      console.warn('[boheomplay] remote board list failed', error);
+      console.error('[boheomplay] board list failed', error);
     }
   }
 
@@ -175,7 +144,7 @@
       }
 
       const formData = new FormData(questionForm);
-      if ((formData.get('website') || '').trim()) return;
+      if (String(formData.get('website') || '').trim()) return;
 
       if (Date.now() - openedAt < 1200) {
         setResult('잠시 후 다시 등록해주세요.', 'error');
@@ -183,37 +152,48 @@
       }
 
       const payload = buildPayload(formData);
-      setResult('게시글을 저장 중입니다.', 'pending');
+      const submitButton = questionForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+      setResult('질문을 저장 중입니다.', 'pending');
 
       try {
         const response = await fetch('/api/board-posts', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            accept: 'application/json'
+          },
           body: JSON.stringify(payload)
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.ok || !data.post) throw new Error(data.error || '게시글 저장 실패');
+        if (!response.ok || !data.ok || !data.post) {
+          throw new Error(data.error || '질문 저장에 실패했습니다.');
+        }
 
-        remotePosts.unshift(data.post);
-        activeFilter = '전체';
-        openPostId = data.post.href ? '' : data.post.id;
-        $$('#boardTabs button').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === '전체'));
-        renderBoard();
         questionForm.reset();
         updatePrivateFields();
         fillTrackingFields();
         sendBackupToAppsScript(payload);
 
-        if (data.post.href) {
-          window.location.href = data.post.href;
+        if (payload.visibility === 'private') {
+          setResult('비공개 질문이 등록되었습니다. 관리자 화면에서 확인할 수 있습니다.', 'success');
           return;
         }
 
-        setResult('비공개 질문이 등록되었습니다.', 'success');
+        posts = dedupePosts([data.post, ...posts]);
+        activeFilter = '전체';
+        openPostId = '';
+        $$('#boardTabs button').forEach((item) => {
+          item.classList.toggle('is-active', item.dataset.filter === '전체');
+        });
+        renderBoard();
+        setResult('질문이 등록되었습니다. 질문 목록 최상단에서 확인할 수 있습니다.', 'success');
         document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
         console.error('[boheomplay] board save failed', error);
-        setResult('게시글 저장소 설정이 필요합니다. 관리자에게 문의해주세요.', 'error');
+        setResult(error.message || '질문 저장에 실패했습니다.', 'error');
+      } finally {
+        if (submitButton) submitButton.disabled = false;
       }
     });
   }
@@ -248,14 +228,14 @@
 
   function renderBoard() {
     if (!boardList) return;
-    const posts = getFilteredPosts().slice(0, 30);
+    const visiblePosts = getFilteredPosts().slice(0, 30);
 
-    if (!posts.length) {
+    if (!visiblePosts.length) {
       boardList.innerHTML = '<div class="board-empty">등록된 질문이 없습니다.</div>';
       return;
     }
 
-    boardList.innerHTML = posts.map((post) => {
+    boardList.innerHTML = visiblePosts.map((post) => {
       const answered = post.status === '답변완료' || Boolean(post.answer);
       const rowContent = `
         <span class="board-no">${escapeHtml(post.no)}</span>
@@ -287,31 +267,20 @@
   }
 
   function getFilteredPosts() {
-    const posts = getAllPosts();
     if (activeFilter === '전체') return posts;
     if (activeFilter === '보험료') return posts.filter((post) => post.category === '보험료' || post.category === '보험료 줄이기');
     if (activeFilter === '태아보험') return posts.filter((post) => post.category === '태아보험' || post.category === '태아·어린이보험');
     return posts.filter((post) => post.category === activeFilter);
   }
 
-  function getAllPosts() {
+  function dedupePosts(input) {
     const seen = new Set();
-    return remotePosts.concat(getLocalPosts(), seedPosts).filter((post) => {
+    return (Array.isArray(input) ? input : []).filter((post) => {
       const key = post.id || post.slug || post.href || post.title;
-      if (seen.has(key)) return false;
+      if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }
-
-  function getLocalPosts() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
   }
 
   function submitWithTimeout(url, body, timeout) {
