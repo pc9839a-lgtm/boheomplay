@@ -74,9 +74,7 @@
   }
 
   function bindVisibilityToggle() {
-    $$('input[name="visibility"]').forEach((input) => {
-      input.addEventListener('change', updatePrivateFields);
-    });
+    $$('input[name="visibility"]').forEach((input) => input.addEventListener('change', updatePrivateFields));
     privatePhoneInput?.addEventListener('input', () => {
       privatePhoneInput.value = privatePhoneInput.value.replace(/[^0-9]/g, '').slice(0, 11);
     });
@@ -116,22 +114,67 @@
     }).filter(Boolean);
   }
 
+  async function fetchBoardPosts() {
+    const response = await fetch(`/api/board-posts?ts=${Date.now()}`, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { accept: 'application/json' }
+    });
+    const text = await response.text();
+    let data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (error) { data = {}; }
+    if (!response.ok || !data.ok || !Array.isArray(data.posts)) {
+      throw new Error(formatServerError(data, response.status));
+    }
+    return data.posts;
+  }
+
   async function loadRemotePosts() {
     try {
-      const response = await fetch('/api/board-posts', {
-        method: 'GET',
-        cache: 'no-store',
-        headers: { accept: 'application/json' }
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok || !Array.isArray(data.posts)) {
-        throw new Error(formatServerError(data, response.status));
-      }
-      posts = dedupePosts([...data.posts, ...initialPosts]);
+      const remote = await fetchBoardPosts();
+      posts = dedupePosts([...remote, ...initialPosts]);
       renderBoard();
+      return remote;
     } catch (error) {
       console.error('[boheomplay] board list failed', error);
+      return [];
     }
+  }
+
+  async function findSavedPost(payload) {
+    const delays = [0, 200, 500, 1000, 1800];
+    for (const delay of delays) {
+      if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+      try {
+        const remote = await fetchBoardPosts();
+        const match = remote.find((post) =>
+          post &&
+          String(post.category || '') === payload.category &&
+          String(post.title || '').trim() === payload.title &&
+          String(post.message || '').trim() === payload.message
+        );
+        if (match) return match;
+      } catch (error) {
+        // Retry while the KV write becomes visible.
+      }
+    }
+    return null;
+  }
+
+  function optimisticPost(payload) {
+    const id = `saved-${Date.now()}`;
+    return {
+      id,
+      slug: id,
+      no: 'NEW',
+      category: payload.category,
+      title: payload.visibility === 'private' ? '비공개 질문입니다.' : payload.title,
+      message: payload.visibility === 'private' ? '비공개 질문은 관리자만 확인할 수 있습니다.' : payload.message,
+      nickname: payload.visibility === 'private' ? '비공개' : payload.nickname,
+      status: '답변대기',
+      time: '방금 전',
+      href: ''
+    };
   }
 
   function bindQuestionForm() {
@@ -166,11 +209,21 @@
           },
           body: JSON.stringify(payload)
         });
-        const data = await response.json().catch(() => ({}));
 
-        if (!response.ok || !data.ok || data.stored !== true || !data.post) {
-          throw new Error(formatServerError(data, response.status));
-        }
+        const responseText = await response.text();
+        let data = {};
+        try { data = responseText ? JSON.parse(responseText) : {}; } catch (error) { data = {}; }
+
+        if (!response.ok) throw new Error(formatServerError(data, response.status));
+
+        const boardVersion = response.headers.get('x-board-version') || '';
+        const directSaveConfirmed = response.status === 201 && /^direct-kv-v\d+$/i.test(boardVersion);
+        let savedPost = data.post || null;
+
+        if (!savedPost && payload.visibility === 'public') savedPost = await findSavedPost(payload);
+
+        const successConfirmed = data.stored === true || Boolean(savedPost) || directSaveConfirmed;
+        if (!successConfirmed) throw new Error(formatServerError(data, response.status));
 
         questionForm.reset();
         updatePrivateFields();
@@ -179,18 +232,21 @@
 
         if (payload.visibility === 'private') {
           setResult('비공개 질문이 저장되었습니다. 관리자 화면에서 확인할 수 있습니다.', 'success');
+          setTimeout(loadRemotePosts, 600);
           return;
         }
 
-        posts = dedupePosts([data.post, ...posts]);
+        const visiblePost = savedPost || optimisticPost(payload);
+        posts = dedupePosts([visiblePost, ...posts]);
         activeFilter = '전체';
-        openPostId = '';
+        openPostId = visiblePost.href ? '' : visiblePost.id;
         $$('#boardTabs button').forEach((item) => {
           item.classList.toggle('is-active', item.dataset.filter === '전체');
         });
         renderBoard();
         setResult('질문이 저장되었습니다. 질문 목록 최상단에서 확인할 수 있습니다.', 'success');
         document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(loadRemotePosts, 800);
       } catch (error) {
         console.error('[boheomplay] board save failed', error);
         setResult(error.message || '질문 저장에 실패했습니다.', 'error');
