@@ -9,8 +9,8 @@ function patchHtml(html){
     .replaceAll('https://boheomplay.pages.dev',SITE)
     .replaceAll(`${SITE}/og-image.jpg`,OG)
     .replace(/<script[^>]+src=["'][^"']*\/assets\/js\/board-router\.js[^"']*["'][^>]*><\/script>/g,'')
-    .replace(/\/assets\/js\/config\.js\?v=[^"']+/g,'/assets/js/config.js?v=20260715-minimal-kv-v8')
-    .replace(/\/assets\/js\/main\.js\?v=[^"']+/g,'/assets/js/main.js?v=20260715-minimal-kv-v8');
+    .replace(/\/assets\/js\/config\.js\?v=[^"']+/g,'/assets/js/config.js?v=20260715-direct-kv-v9')
+    .replace(/\/assets\/js\/main\.js\?v=[^"']+/g,'/assets/js/main.js?v=20260715-direct-kv-v9');
   if(!out.includes('property="og:image"')) out=out.replace('</head>',`<meta property="og:image" content="${OG}"/><meta property="og:image:secure_url" content="${OG}"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta property="og:image:type" content="image/jpeg"/><meta name="twitter:image" content="${OG}"/>${CORE_SCRIPTS}</head>`);
   else if(!out.includes('/assets/js/consent-all.js')) out=out.replace('</head>',`${CORE_SCRIPTS}</head>`);
   if(out.includes('<footer')&&!out.includes('class="site-compliance-notice"')) out=out.replace('<footer',`${NOTICE}<footer`);
