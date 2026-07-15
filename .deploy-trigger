@@ -1,2 +1,2 @@
-redeploy: 2026-07-15T17:58:00+09:00
-source: question-board-router-removal-and-direct-kv-v4
+redeploy: 2026-07-15T18:24:00+09:00
+source: consistent-kv-board-read-merge-v5
