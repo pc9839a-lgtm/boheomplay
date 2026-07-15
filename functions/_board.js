@@ -1,12 +1,9 @@
 import { renderUnifiedQuestionPage } from './_unified-question.js';
 
-const CANONICAL_KEY = 'board:all-posts:v1';
-const LEGACY_LIST_KEY = 'board:posts:v2';
-const LEGACY_INDEX_KEY = 'board:index';
+const CANONICAL_KEY = 'board:all-posts:v2';
 const POST_PREFIX = 'board:post:';
 const MAX_LIST = 100;
 const BASE_NO = 1017;
-const TOMBSTONE_TTL = 60 * 60 * 24 * 365;
 
 const CATEGORY_PREFIX = {
   '실비보험': 'silbi',
@@ -27,7 +24,7 @@ export function json(data, status = 200, headers = {}) {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
+      'cache-control': 'no-store, no-cache, must-revalidate, max-age=0',
       ...headers
     }
   });
@@ -38,7 +35,7 @@ export function html(content, status = 200) {
     status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'public, max-age=120'
+      'cache-control': 'no-store'
     }
   });
 }
@@ -53,33 +50,15 @@ export function esc(value = '') {
   }[char]));
 }
 
-function store(env) {
-  return env.BOARD_POSTS || null;
-}
-
-function postKey(slug) {
-  return `${POST_PREFIX}${slug}`;
-}
-
-async function readJson(kv, key, fallback) {
-  try {
-    const raw = await kv.get(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
-  } catch (error) {
-    return fallback;
-  }
-}
-
-async function writeJson(kv, key, value, options) {
-  await kv.put(key, JSON.stringify(value), options);
+function getStore(env) {
+  return env?.BOARD_POSTS || null;
 }
 
 function clean(value = '', max = 1000) {
   return String(value || '').trim().replace(/\s+/g, ' ').slice(0, max);
 }
 
-function bodyClean(value = '', max = 1800) {
+function cleanBody(value = '', max = 3000) {
   return String(value || '')
     .trim()
     .replace(/\r\n/g, '\n')
@@ -92,110 +71,33 @@ function makeSlug(category) {
   return `${prefix}-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-function timestamp(post) {
-  return new Date(post?.updatedAt || post?.createdAt || 0).getTime() || 0;
-}
-
-function mergePosts(...groups) {
-  const bySlug = new Map();
-
-  for (const post of groups.flat()) {
-    if (!post || typeof post !== 'object' || !post.slug) continue;
-    const existing = bySlug.get(post.slug);
-    if (!existing || timestamp(post) >= timestamp(existing)) bySlug.set(post.slug, post);
-  }
-
-  return Array.from(bySlug.values())
-    .filter((post) => !post.deleted)
+function normalizePosts(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  return value
+    .filter((post) => post && typeof post === 'object' && post.slug && !post.deleted)
+    .filter((post) => {
+      if (seen.has(post.slug)) return false;
+      seen.add(post.slug);
+      return true;
+    })
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, MAX_LIST);
 }
 
-function snapshot(posts) {
-  return JSON.stringify((Array.isArray(posts) ? posts : []).map((post) => [
-    post.slug,
-    post.updatedAt || post.createdAt || '',
-    Boolean(post.deleted)
-  ]));
-}
-
-async function readIndexedPosts(kv) {
-  const slugs = await readJson(kv, LEGACY_INDEX_KEY, []);
-  if (!Array.isArray(slugs)) return [];
-  const values = [];
-  for (const slug of slugs.slice(0, MAX_LIST)) {
-    const post = await readJson(kv, postKey(slug), null);
-    if (post) values.push(post);
-  }
-  return values;
-}
-
-async function readDirectPosts(kv) {
-  const names = [];
-  let cursor;
-  let pages = 0;
-
-  do {
-    const page = await kv.list({
-      prefix: POST_PREFIX,
-      limit: 1000,
-      ...(cursor ? { cursor } : {})
-    });
-    for (const key of page.keys || []) {
-      if (key?.name) names.push(key.name);
-    }
-    cursor = page.list_complete ? '' : page.cursor;
-    pages += 1;
-  } while (cursor && pages < 5);
-
-  const posts = [];
-  for (let index = 0; index < names.length; index += 20) {
-    const chunk = names.slice(index, index + 20);
-    const values = await Promise.all(chunk.map((name) => readJson(kv, name, null)));
-    posts.push(...values.filter(Boolean));
-  }
-  return posts;
-}
-
-async function readAllPosts(kv) {
-  const canonical = await readJson(kv, CANONICAL_KEY, []);
-  const legacyList = await readJson(kv, LEGACY_LIST_KEY, []);
-
-  let indexed = [];
-  let direct = [];
+async function readPosts(kv) {
+  const raw = await kv.get(CANONICAL_KEY);
+  if (!raw) return [];
   try {
-    indexed = await readIndexedPosts(kv);
+    return normalizePosts(JSON.parse(raw));
   } catch (error) {
-    indexed = [];
+    return [];
   }
-  try {
-    direct = await readDirectPosts(kv);
-  } catch (error) {
-    direct = [];
-  }
-
-  const merged = mergePosts(
-    Array.isArray(canonical) ? canonical : [],
-    Array.isArray(legacyList) ? legacyList : [],
-    indexed,
-    direct
-  );
-
-  const canonicalLive = mergePosts(Array.isArray(canonical) ? canonical : []);
-  if (snapshot(canonicalLive) !== snapshot(merged)) {
-    try {
-      await writeJson(kv, CANONICAL_KEY, merged);
-    } catch (error) {
-      // Reading remains available even if a migration repair write fails.
-    }
-  }
-
-  return merged;
 }
 
-async function writeAllPosts(kv, posts) {
-  const normalized = mergePosts(posts);
-  await writeJson(kv, CANONICAL_KEY, normalized);
+async function writePosts(kv, posts) {
+  const normalized = normalizePosts(posts);
+  await kv.put(CANONICAL_KEY, JSON.stringify(normalized));
   return normalized;
 }
 
@@ -238,29 +140,25 @@ function adminPost(post) {
 }
 
 export async function createBoardPost(env, input) {
-  const kv = store(env);
+  const kv = getStore(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
   const visibility = clean(input.visibility || 'public', 20) === 'private' ? 'private' : 'public';
   const category = clean(input.category || '기타', 40) || '기타';
   const title = clean(input.title, 100);
-  const message = bodyClean(input.message, 1800);
+  const message = cleanBody(input.message, 1800);
   const nickname = clean(input.nickname || '익명', 40) || '익명';
   const privateName = clean(input.private_name || input.privateName || '', 40);
-  const privatePhone = clean(input.private_phone || input.privatePhone || '', 20)
-    .replace(/[^0-9]/g, '')
-    .slice(0, 11);
+  const privatePhone = clean(input.private_phone || input.privatePhone || '', 20).replace(/[^0-9]/g, '').slice(0, 11);
 
   if (!title || !message) throw new Error('INVALID_POST');
   if (visibility === 'private' && (!privateName || !privatePhone)) throw new Error('PRIVATE_CONTACT_REQUIRED');
 
-  const currentPosts = await readAllPosts(kv);
-  const maxNo = currentPosts.reduce((max, post) => Math.max(max, Number(post.no) || 0), BASE_NO);
-  const slug = makeSlug(category);
+  const posts = await readPosts(kv);
+  const maxNo = posts.reduce((max, post) => Math.max(max, Number(post.no) || 0), BASE_NO);
   const createdAt = new Date().toISOString();
-
   const post = {
-    slug,
+    slug: makeSlug(category),
     no: maxNo + 1,
     visibility,
     category,
@@ -275,22 +173,31 @@ export async function createBoardPost(env, input) {
     deleted: false
   };
 
-  await writeAllPosts(kv, [post, ...currentPosts]);
+  await writePosts(kv, [post, ...posts]);
+
   try {
-    await writeJson(kv, postKey(slug), post);
+    await kv.put(`${POST_PREFIX}${post.slug}`, JSON.stringify(post));
   } catch (error) {
-    // The canonical list is the source of truth; detail lookup can fall back to it.
+    // 목록 저장이 성공했으므로 상세 키 실패는 등록 실패로 처리하지 않는다.
   }
+
   return post;
 }
 
 export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
-  const kv = store(env);
+  const kv = getStore(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  let post = await readJson(kv, postKey(slug), null);
+  let post = null;
+  try {
+    const raw = await kv.get(`${POST_PREFIX}${slug}`);
+    post = raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    post = null;
+  }
+
   if (!post) {
-    const posts = await readAllPosts(kv);
+    const posts = await readPosts(kv);
     post = posts.find((item) => item.slug === slug) || null;
   }
 
@@ -300,61 +207,58 @@ export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
 }
 
 export async function listBoardPosts(env, { publicOnly = true } = {}) {
-  const kv = store(env);
+  const kv = getStore(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  const posts = await readAllPosts(kv);
+  const posts = await readPosts(kv);
   return posts
     .filter((post) => !(publicOnly && post.visibility === 'private'))
     .map((post) => publicOnly ? publicPost(post) : adminPost(post));
 }
 
 export async function answerBoardPost(env, slug, answer) {
-  const kv = store(env);
+  const kv = getStore(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  const currentPosts = await readAllPosts(kv);
-  const post = currentPosts.find((item) => item.slug === slug) || null;
-  if (!post) return null;
+  const posts = await readPosts(kv);
+  const index = posts.findIndex((post) => post.slug === slug);
+  if (index < 0) return null;
 
   const answeredAt = new Date().toISOString();
   const updated = {
-    ...post,
-    answer: bodyClean(answer, 3000),
+    ...posts[index],
+    answer: cleanBody(answer, 3000),
     answeredAt,
     updatedAt: answeredAt
   };
 
-  await writeAllPosts(kv, [updated, ...currentPosts.filter((item) => item.slug !== slug)]);
+  const next = posts.map((post, postIndex) => postIndex === index ? updated : post);
+  await writePosts(kv, next);
+
   try {
-    await writeJson(kv, postKey(slug), updated);
+    await kv.put(`${POST_PREFIX}${slug}`, JSON.stringify(updated));
   } catch (error) {
-    // Canonical storage remains authoritative.
+    // canonical 목록이 원본이다.
   }
+
   return updated;
 }
 
 export async function deleteBoardPost(env, slug) {
-  const kv = store(env);
+  const kv = getStore(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  const currentPosts = await readAllPosts(kv);
-  const post = currentPosts.find((item) => item.slug === slug) || null;
-  if (!post) return false;
+  const posts = await readPosts(kv);
+  if (!posts.some((post) => post.slug === slug)) return false;
+  await writePosts(kv, posts.filter((post) => post.slug !== slug));
 
-  await writeAllPosts(kv, currentPosts.filter((item) => item.slug !== slug));
-
-  const tombstone = {
-    ...post,
-    deleted: true,
-    updatedAt: new Date().toISOString()
-  };
   try {
-    await writeJson(kv, postKey(slug), tombstone, { expirationTtl: TOMBSTONE_TTL });
+    await kv.delete(`${POST_PREFIX}${slug}`);
     await kv.delete(`board:consent:${slug}`);
   } catch (error) {
-    // Canonical storage already removed the question.
+    // canonical 목록에서는 이미 제거됐다.
   }
+
   return true;
 }
 
@@ -365,12 +269,8 @@ export function renderBoardPost(post) {
     title: post.title,
     category: post.category,
     question: post.message,
-    lead: hasAnswer
-      ? post.answer
-      : '질문이 정상적으로 접수되었습니다. 아직 답변이 등록되지 않았습니다.',
-    point: hasAnswer
-      ? '본 답변은 질문에 기재된 내용을 기준으로 제공되었습니다.'
-      : '현재 답변대기 상태입니다.',
+    lead: hasAnswer ? post.answer : '질문이 정상적으로 접수되었습니다. 아직 답변이 등록되지 않았습니다.',
+    point: hasAnswer ? '본 답변은 질문에 기재된 내용을 기준으로 제공되었습니다.' : '현재 답변대기 상태입니다.',
     bullets: hasAnswer ? [] : [
       '관리자가 질문 내용을 확인한 뒤 답변을 등록합니다.',
       '답변 전에는 특정 상품의 가입 가능 여부를 확정할 수 없습니다.'
