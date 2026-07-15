@@ -1,8 +1,9 @@
 import { renderUnifiedQuestionPage } from './_unified-question.js';
 
+const CANONICAL_KEY = 'board:all-posts:v1';
+const LEGACY_LIST_KEY = 'board:posts:v2';
+const LEGACY_INDEX_KEY = 'board:index';
 const POST_PREFIX = 'board:post:';
-const LIST_KEY = 'board:posts:v2';
-const INDEX_KEY = 'board:index';
 const MAX_LIST = 100;
 const BASE_NO = 1017;
 const TOMBSTONE_TTL = 60 * 60 * 24 * 365;
@@ -95,7 +96,7 @@ function timestamp(post) {
   return new Date(post?.updatedAt || post?.createdAt || 0).getTime() || 0;
 }
 
-function mergeStoredPosts(...groups) {
+function mergePosts(...groups) {
   const bySlug = new Map();
 
   for (const post of groups.flat()) {
@@ -110,16 +111,23 @@ function mergeStoredPosts(...groups) {
     .slice(0, MAX_LIST);
 }
 
-async function readIndexedPosts(kv) {
-  const slugs = await readJson(kv, INDEX_KEY, []);
-  if (!Array.isArray(slugs) || !slugs.length) return [];
+function snapshot(posts) {
+  return JSON.stringify((Array.isArray(posts) ? posts : []).map((post) => [
+    post.slug,
+    post.updatedAt || post.createdAt || '',
+    Boolean(post.deleted)
+  ]));
+}
 
-  const posts = [];
+async function readIndexedPosts(kv) {
+  const slugs = await readJson(kv, LEGACY_INDEX_KEY, []);
+  if (!Array.isArray(slugs)) return [];
+  const values = [];
   for (const slug of slugs.slice(0, MAX_LIST)) {
     const post = await readJson(kv, postKey(slug), null);
-    if (post) posts.push(post);
+    if (post) values.push(post);
   }
-  return posts;
+  return values;
 }
 
 async function readDirectPosts(kv) {
@@ -133,11 +141,9 @@ async function readDirectPosts(kv) {
       limit: 1000,
       ...(cursor ? { cursor } : {})
     });
-
     for (const key of page.keys || []) {
       if (key?.name) names.push(key.name);
     }
-
     cursor = page.list_complete ? '' : page.cursor;
     pages += 1;
   } while (cursor && pages < 5);
@@ -151,37 +157,45 @@ async function readDirectPosts(kv) {
   return posts;
 }
 
-async function readStoredPosts(kv) {
-  const listPosts = await readJson(kv, LIST_KEY, []);
+async function readAllPosts(kv) {
+  const canonical = await readJson(kv, CANONICAL_KEY, []);
+  const legacyList = await readJson(kv, LEGACY_LIST_KEY, []);
 
-  let indexedPosts = [];
-  let directPosts = [];
-
+  let indexed = [];
+  let direct = [];
   try {
-    indexedPosts = await readIndexedPosts(kv);
+    indexed = await readIndexedPosts(kv);
   } catch (error) {
-    indexedPosts = [];
+    indexed = [];
+  }
+  try {
+    direct = await readDirectPosts(kv);
+  } catch (error) {
+    direct = [];
   }
 
-  try {
-    directPosts = await readDirectPosts(kv);
-  } catch (error) {
-    directPosts = [];
-  }
-
-  return mergeStoredPosts(
-    Array.isArray(listPosts) ? listPosts : [],
-    indexedPosts,
-    directPosts
+  const merged = mergePosts(
+    Array.isArray(canonical) ? canonical : [],
+    Array.isArray(legacyList) ? legacyList : [],
+    indexed,
+    direct
   );
+
+  const canonicalLive = mergePosts(Array.isArray(canonical) ? canonical : []);
+  if (snapshot(canonicalLive) !== snapshot(merged)) {
+    try {
+      await writeJson(kv, CANONICAL_KEY, merged);
+    } catch (error) {
+      // Reading remains available even if a migration repair write fails.
+    }
+  }
+
+  return merged;
 }
 
-async function persistStoredPosts(kv, posts) {
-  const normalized = mergeStoredPosts(posts);
-  await Promise.all([
-    writeJson(kv, LIST_KEY, normalized),
-    writeJson(kv, INDEX_KEY, normalized.map((post) => post.slug))
-  ]);
+async function writeAllPosts(kv, posts) {
+  const normalized = mergePosts(posts);
+  await writeJson(kv, CANONICAL_KEY, normalized);
   return normalized;
 }
 
@@ -240,7 +254,7 @@ export async function createBoardPost(env, input) {
   if (!title || !message) throw new Error('INVALID_POST');
   if (visibility === 'private' && (!privateName || !privatePhone)) throw new Error('PRIVATE_CONTACT_REQUIRED');
 
-  const currentPosts = await readStoredPosts(kv);
+  const currentPosts = await readAllPosts(kv);
   const maxNo = currentPosts.reduce((max, post) => Math.max(max, Number(post.no) || 0), BASE_NO);
   const slug = makeSlug(category);
   const createdAt = new Date().toISOString();
@@ -261,8 +275,12 @@ export async function createBoardPost(env, input) {
     deleted: false
   };
 
-  await writeJson(kv, postKey(slug), post);
-  await persistStoredPosts(kv, [post, ...currentPosts]);
+  await writeAllPosts(kv, [post, ...currentPosts]);
+  try {
+    await writeJson(kv, postKey(slug), post);
+  } catch (error) {
+    // The canonical list is the source of truth; detail lookup can fall back to it.
+  }
   return post;
 }
 
@@ -272,7 +290,7 @@ export async function getBoardPost(env, slug, { includePrivate = false } = {}) {
 
   let post = await readJson(kv, postKey(slug), null);
   if (!post) {
-    const posts = await readStoredPosts(kv);
+    const posts = await readAllPosts(kv);
     post = posts.find((item) => item.slug === slug) || null;
   }
 
@@ -285,7 +303,7 @@ export async function listBoardPosts(env, { publicOnly = true } = {}) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  const posts = await readStoredPosts(kv);
+  const posts = await readAllPosts(kv);
   return posts
     .filter((post) => !(publicOnly && post.visibility === 'private'))
     .map((post) => publicOnly ? publicPost(post) : adminPost(post));
@@ -295,10 +313,9 @@ export async function answerBoardPost(env, slug, answer) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  const currentPosts = await readStoredPosts(kv);
-  let post = await readJson(kv, postKey(slug), null);
-  if (!post) post = currentPosts.find((item) => item.slug === slug) || null;
-  if (!post || post.deleted) return null;
+  const currentPosts = await readAllPosts(kv);
+  const post = currentPosts.find((item) => item.slug === slug) || null;
+  if (!post) return null;
 
   const answeredAt = new Date().toISOString();
   const updated = {
@@ -308,8 +325,12 @@ export async function answerBoardPost(env, slug, answer) {
     updatedAt: answeredAt
   };
 
-  await writeJson(kv, postKey(slug), updated);
-  await persistStoredPosts(kv, [updated, ...currentPosts.filter((item) => item.slug !== slug)]);
+  await writeAllPosts(kv, [updated, ...currentPosts.filter((item) => item.slug !== slug)]);
+  try {
+    await writeJson(kv, postKey(slug), updated);
+  } catch (error) {
+    // Canonical storage remains authoritative.
+  }
   return updated;
 }
 
@@ -317,24 +338,22 @@ export async function deleteBoardPost(env, slug) {
   const kv = store(env);
   if (!kv) throw new Error('BOARD_STORE_NOT_CONFIGURED');
 
-  const currentPosts = await readStoredPosts(kv);
-  let post = await readJson(kv, postKey(slug), null);
-  if (!post) post = currentPosts.find((item) => item.slug === slug) || null;
+  const currentPosts = await readAllPosts(kv);
+  const post = currentPosts.find((item) => item.slug === slug) || null;
   if (!post) return false;
+
+  await writeAllPosts(kv, currentPosts.filter((item) => item.slug !== slug));
 
   const tombstone = {
     ...post,
     deleted: true,
     updatedAt: new Date().toISOString()
   };
-
-  await writeJson(kv, postKey(slug), tombstone, { expirationTtl: TOMBSTONE_TTL });
-  await persistStoredPosts(kv, currentPosts.filter((item) => item.slug !== slug));
-
   try {
+    await writeJson(kv, postKey(slug), tombstone, { expirationTtl: TOMBSTONE_TTL });
     await kv.delete(`board:consent:${slug}`);
   } catch (error) {
-    // The question remains deleted if consent cleanup fails.
+    // Canonical storage already removed the question.
   }
   return true;
 }
