@@ -1,6 +1,7 @@
 (function(){
   const PAGE_SIZE=20;
   const STORAGE_KEY='boheomplay_board_posts_v2';
+  const PURGE_MARKER='boheomplay_manual_posts_purged_20260715_v3';
   let visibleCount=PAGE_SIZE;
   let activeFilter='전체';
   let posts=[];
@@ -32,6 +33,11 @@
 
   function isPrivate(post){return post.title==='비공개 질문입니다.'||post.nickname==='비공개';}
 
+  function isStaleManualPost(post){
+    const item=normalize(post);
+    return item.no==='NEW'||item.id.startsWith('local-')||item.slug.startsWith('local-')||item.href.includes('/q/local-preview');
+  }
+
   function hrefFor(post){
     if(post.href&&post.href!=='#board') return post.href;
     if(isPrivate(post)||!post.title||!post.message) return '';
@@ -49,11 +55,14 @@
     });
   }
 
-  function localPosts(){
+  function purgeLocalManualPosts(){
     try{
-      const value=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
-      return Array.isArray(value)?value:[];
-    }catch(error){return [];}
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(PURGE_MARKER,'1');
+    }catch(error){
+      // Storage may be unavailable in private browsing mode.
+    }
   }
 
   function domPosts(list){
@@ -71,7 +80,7 @@
         message:item.querySelector('.board-detail>.detail-text')?.textContent||'',
         answer:item.querySelector('.answer-block .detail-text:not(.answer-empty)')?.textContent||''
       });
-    }).filter(Boolean);
+    }).filter(Boolean).filter((post)=>!isStaleManualPost(post));
   }
 
   function filtered(){
@@ -121,6 +130,8 @@
   async function init(){
     const old=document.getElementById('boardList');
     if(!old||old.dataset.routerReady==='true') return;
+
+    purgeLocalManualPosts();
     const initial=domPosts(old);
     const list=old.cloneNode(true);
     list.dataset.routerReady='true';
@@ -140,8 +151,10 @@
       const response=await fetch('/api/board-posts',{method:'GET',cache:'no-store'});
       const data=await response.json();
       const remote=response.ok&&data.ok&&Array.isArray(data.posts)?data.posts:[];
-      posts=merge(remote,localPosts(),initial);
-    }catch(error){posts=merge(localPosts(),initial);}
+      posts=merge(remote.filter((post)=>!isStaleManualPost(post)),initial);
+    }catch(error){
+      posts=merge(initial);
+    }
     render(list);
   }
 
