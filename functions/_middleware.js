@@ -1,3 +1,5 @@
+import { publicFallbackResponse } from './_board-fallback.js';
+
 const SITE='https://boheomplay.pagero.kr';
 const OG=`${SITE}/og-image`;
 const CORE_SCRIPTS='<script src="/assets/js/compliance.js?v=20260712-v4"></script><script src="/assets/js/agent-info.js?v=20260712-v1"></script>';
@@ -33,8 +35,24 @@ function secure(headers,path,method){
 }
 
 export async function onRequest(context){
-  const response=await context.next();
   const url=new URL(context.request.url);
+  const isPublicBoardPost=context.request.method==='POST'&&url.pathname==='/api/board-posts';
+  let boardInput={};
+  if(isPublicBoardPost){
+    try{boardInput=await context.request.clone().json();}catch(error){boardInput={};}
+  }
+
+  const response=await context.next();
+
+  if(isPublicBoardPost&&boardInput.visibility!=='private'){
+    try{
+      const data=await response.clone().json();
+      if(!response.ok||!data?.ok||!data?.post?.href) return publicFallbackResponse(boardInput);
+    }catch(error){
+      return publicFallbackResponse(boardInput);
+    }
+  }
+
   const headers=new Headers(response.headers);
   secure(headers,url.pathname,context.request.method);
   let body=response.body;
