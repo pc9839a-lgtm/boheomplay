@@ -26,6 +26,10 @@ function relatedFor(current) {
     .map((item) => ({ slug: item.slug, title: item.title }));
 }
 
+function preventDuplicateNotice(html) {
+  return html.replace('</head>', '<style>.thread-page .answer-compliance-note{display:none!important}</style></head>');
+}
+
 function normalizeBase(item) {
   const summary = Array.isArray(item.summary) ? item.summary.filter(Boolean) : [];
   const checks = Array.isArray(item.checks) ? item.checks.filter(Boolean) : [];
@@ -76,16 +80,20 @@ function normalizeDaily(item) {
   };
 }
 
+function responseFor(item, normalized) {
+  return htmlResponse(preventDuplicateNotice(renderUnifiedQuestionPage(normalized, relatedFor(item))));
+}
+
 export async function onRequest(context) {
   const slug = String(context.params.slug || '').trim();
 
   const daily = dailyQuestions.find((item) => item.slug === slug);
-  if (daily) return htmlResponse(renderUnifiedQuestionPage(normalizeDaily(daily), relatedFor(daily)));
+  if (daily) return responseFor(daily, normalizeDaily(daily));
 
   const extra = extraQuestions.find((item) => item.slug === slug);
-  if (extra) return htmlResponse(renderUnifiedQuestionPage(normalizeExtra(extra), relatedFor(extra)));
+  if (extra) return responseFor(extra, normalizeExtra(extra));
 
   const question = questions.find((item) => item.slug === slug);
   if (!question) return htmlResponse(renderNotFound(), 404);
-  return htmlResponse(renderUnifiedQuestionPage(normalizeBase(question), relatedFor(question)));
+  return responseFor(question, normalizeBase(question));
 }
