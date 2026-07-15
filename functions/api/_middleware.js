@@ -20,20 +20,33 @@ function clean(value, max = 1000) {
   return String(value || '').trim().slice(0, max);
 }
 
+function encodePreview(value) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
 function fallbackPost(input = {}) {
   const isPrivate = input.visibility === 'private';
   const id = `local-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
+  const category = clean(input.category || '기타', 40);
+  const title = isPrivate ? '비공개 질문입니다.' : clean(input.title, 100);
+  const message = isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : clean(input.message, 1800);
+  const nickname = isPrivate ? '비공개' : clean(input.nickname || '익명', 40);
+  const token = isPrivate ? '' : encodePreview({ id, category, title, message, nickname });
+
   return {
     id,
     slug: id,
     no: 'NEW',
-    category: clean(input.category || '기타', 40),
-    title: isPrivate ? '비공개 질문입니다.' : clean(input.title, 100),
-    message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : clean(input.message, 1800),
-    nickname: isPrivate ? '비공개' : clean(input.nickname || '익명', 40),
+    category,
+    title,
+    message,
+    nickname,
     status: '답변대기',
     time: '방금 전',
-    href: '',
+    href: isPrivate ? '' : `/q/local-preview?d=${encodeURIComponent(token)}`,
     answer: ''
   };
 }
@@ -86,6 +99,7 @@ export async function onRequest(context) {
     try {
       const data = await response.clone().json();
       if (!data || data.ok !== true || !data.post) return fallbackResponse(postInput);
+      if (postInput?.visibility !== 'private' && !data.post.href) return fallbackResponse(postInput);
     } catch (error) {
       return fallbackResponse(postInput);
     }
