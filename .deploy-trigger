@@ -1,2 +1,2 @@
-redeploy: 2026-07-15T16:40:00+09:00
-source: live-question-main-admin-kv-fix
+redeploy: 2026-07-15T17:40:00+09:00
+source: direct-kv-question-storage-v3
