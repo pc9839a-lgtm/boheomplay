@@ -26,14 +26,14 @@ function fallbackPost(input = {}) {
   return {
     id,
     slug: id,
-    no: '',
+    no: 'NEW',
     category: clean(input.category || '기타', 40),
     title: isPrivate ? '비공개 질문입니다.' : clean(input.title, 100),
     message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : clean(input.message, 1800),
     nickname: isPrivate ? '비공개' : clean(input.nickname || '익명', 40),
     status: '답변대기',
     time: '방금 전',
-    href: '#board',
+    href: '',
     answer: ''
   };
 }
