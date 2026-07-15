@@ -1,9 +1,7 @@
 import { createBoardPost, listBoardPosts, json } from '../_board.js';
 import { extraBoardPosts } from '../_extra-qa.js';
 import {
-  claimDuplicate,
   clientKey,
-  consumeRateLimit,
   isSameOrigin,
   readJsonBody,
   spamReason,
@@ -71,8 +69,6 @@ function errorResponse(code, status = 400, headers = {}) {
     TOO_MANY_LINKS: '질문에는 링크를 한 개까지만 넣을 수 있습니다.',
     REPEATED_CHARACTERS: '반복 문자를 줄여주세요.',
     SPAM_KEYWORD: '스팸으로 의심되는 내용은 등록할 수 없습니다.',
-    DUPLICATE: '같은 질문이 이미 등록되었습니다.',
-    RATE_LIMITED: '질문을 너무 자주 등록했습니다. 잠시 후 다시 시도해주세요.',
     BOARD_STORE_NOT_CONFIGURED: '질문 저장소가 연결되지 않았습니다.',
     BOARD_STORE_WRITE_FAILED: '질문 저장에 실패했습니다. 잠시 후 다시 등록해주세요.'
   };
@@ -87,22 +83,6 @@ function mergeBoardPosts(posts) {
     seen.add(key);
     return true;
   });
-}
-
-async function safeRateLimit(env, namespace, identity, limit, seconds) {
-  try {
-    return await consumeRateLimit(env, namespace, identity, limit, seconds);
-  } catch (error) {
-    return { allowed: true, retryAfter: 0 };
-  }
-}
-
-async function isDuplicate(env, value) {
-  try {
-    return !(await claimDuplicate(env, 'board-post', value, 21_600));
-  } catch (error) {
-    return false;
-  }
 }
 
 async function recordConsent(env, post, consent, identity, request) {
@@ -138,9 +118,7 @@ function responsePost(post) {
 }
 
 export async function onRequestGet({ env }) {
-  if (!env.BOARD_POSTS) {
-    return errorResponse('BOARD_STORE_NOT_CONFIGURED', 503);
-  }
+  if (!env.BOARD_POSTS) return errorResponse('BOARD_STORE_NOT_CONFIGURED', 503);
 
   try {
     const posts = await listBoardPosts(env, { publicOnly: true });
@@ -191,15 +169,6 @@ export async function onRequestPost(context) {
 
     const invalid = validationError(input, consent);
     if (invalid) return errorResponse(invalid, invalid === 'BOT_DETECTED' ? 403 : 400);
-
-    const shortWindow = await safeRateLimit(env, 'board-10m', identity, 3, 600);
-    if (!shortWindow.allowed) return errorResponse('RATE_LIMITED', 429, { 'retry-after': String(shortWindow.retryAfter) });
-
-    const dailyWindow = await safeRateLimit(env, 'board-day', identity, 10, 86_400);
-    if (!dailyWindow.allowed) return errorResponse('RATE_LIMITED', 429, { 'retry-after': String(dailyWindow.retryAfter) });
-
-    const duplicateValue = `${identity}|${input.visibility}|${input.category}|${input.title}|${input.message}`;
-    if (await isDuplicate(env, duplicateValue)) return errorResponse('DUPLICATE', 409);
 
     const post = await createBoardPost(env, input);
 
