@@ -65,9 +65,11 @@ function errorResponse(code, status = 400, headers = {}) {
     REPEATED_CHARACTERS: '반복 문자를 줄여주세요.',
     SPAM_KEYWORD: '스팸으로 의심되는 내용은 등록할 수 없습니다.',
     DUPLICATE: '같은 질문이 이미 등록되었습니다.',
-    RATE_LIMITED: '질문을 너무 자주 등록했습니다. 잠시 후 다시 시도해주세요.'
+    RATE_LIMITED: '질문을 너무 자주 등록했습니다. 잠시 후 다시 시도해주세요.',
+    BOARD_STORE_NOT_CONFIGURED: '질문 저장소가 연결되지 않았습니다.',
+    BOARD_STORE_WRITE_FAILED: '질문 저장에 실패했습니다. 잠시 후 다시 등록해주세요.'
   };
-  return json({ ok: false, error: messages[code] || '요청을 처리할 수 없습니다.' }, status, headers);
+  return json({ ok: false, code, error: messages[code] || '요청을 처리할 수 없습니다.' }, status, headers);
 }
 
 function mergeBoardPosts(posts) {
@@ -80,15 +82,11 @@ function mergeBoardPosts(posts) {
   });
 }
 
-function getStore(env) {
-  return env.BOARD_POSTS || env.SECURITY_STORE || null;
-}
-
 async function recordConsent(env, post, consent, identity, request) {
-  const store = getStore(env);
-  if (!store) return;
+  const kv = env.BOARD_POSTS || null;
+  if (!kv) return;
 
-  await store.put(`board:consent:${post.slug}`, JSON.stringify({
+  await kv.put(`board:consent:${post.slug}`, JSON.stringify({
     postSlug: post.slug,
     visibility: post.visibility,
     privacyConsent: consent.privacy,
@@ -103,19 +101,40 @@ async function recordConsent(env, post, consent, identity, request) {
 
 async function applyPrivateRetention(env, post) {
   if (post.visibility !== 'private') return;
-  const store = getStore(env);
-  if (!store) return;
-  await store.put(`board:post:${post.slug}`, JSON.stringify(post), { expirationTtl: ONE_YEAR_SECONDS });
+  const kv = env.BOARD_POSTS || null;
+  if (!kv) return;
+  await kv.put(`board:post:${post.slug}`, JSON.stringify(post), { expirationTtl: ONE_YEAR_SECONDS });
+}
+
+async function safeRateLimit(env, namespace, identity, limit, seconds) {
+  try {
+    return await consumeRateLimit(env, namespace, identity, limit, seconds);
+  } catch (error) {
+    return { allowed: true, retryAfter: 0 };
+  }
+}
+
+async function isDuplicate(env, value) {
+  try {
+    return !(await claimDuplicate(env, 'board-post', value, 21_600));
+  } catch (error) {
+    return false;
+  }
 }
 
 export async function onRequestGet({ env }) {
   try {
     const posts = await listBoardPosts(env, { publicOnly: true });
-    return json({ ok: true, posts: mergeBoardPosts(posts) }, 200, {
+    return json({ ok: true, storageConfigured: true, posts: mergeBoardPosts(posts) }, 200, {
       'cache-control': 'no-store, no-cache, must-revalidate, max-age=0'
     });
   } catch (error) {
-    return json({ ok: true, posts: extraBoardPosts }, 200, {
+    return json({
+      ok: false,
+      code: String(error?.message || 'BOARD_STORE_READ_FAILED'),
+      error: '질문 목록을 불러오지 못했습니다.',
+      posts: extraBoardPosts
+    }, 503, {
       'cache-control': 'no-store, no-cache, must-revalidate, max-age=0'
     });
   }
@@ -128,12 +147,12 @@ export async function onRequestPost({ request, env }) {
     const raw = await readJsonBody(request, 12_000);
     const identity = await clientKey(request);
 
-    const shortWindow = await consumeRateLimit(env, 'board-10m', identity, 3, 600);
+    const shortWindow = await safeRateLimit(env, 'board-10m', identity, 3, 600);
     if (!shortWindow.allowed) {
       return errorResponse('RATE_LIMITED', 429, { 'retry-after': String(shortWindow.retryAfter) });
     }
 
-    const dailyWindow = await consumeRateLimit(env, 'board-day', identity, 10, 86_400);
+    const dailyWindow = await safeRateLimit(env, 'board-day', identity, 10, 86_400);
     if (!dailyWindow.allowed) {
       return errorResponse('RATE_LIMITED', 429, { 'retry-after': String(dailyWindow.retryAfter) });
     }
@@ -160,18 +179,18 @@ export async function onRequestPost({ request, env }) {
     if (invalid) return errorResponse(invalid, invalid === 'BOT_DETECTED' ? 403 : 400);
 
     const duplicateValue = `${identity}|${input.visibility}|${input.category}|${input.title}|${input.message}`;
-    if (!(await claimDuplicate(env, 'board-post', duplicateValue, 21_600))) {
-      return errorResponse('DUPLICATE', 409);
-    }
+    if (await isDuplicate(env, duplicateValue)) return errorResponse('DUPLICATE', 409);
 
     const post = await createBoardPost(env, input);
-    await Promise.all([
+
+    Promise.allSettled([
       recordConsent(env, post, consent, identity, request),
       applyPrivateRetention(env, post)
-    ]);
+    ]).catch(() => undefined);
 
     return json({
       ok: true,
+      stored: true,
       post: {
         id: post.slug,
         slug: post.slug,
@@ -186,9 +205,12 @@ export async function onRequestPost({ request, env }) {
       }
     }, 201);
   } catch (error) {
-    if (error.message === 'UNSUPPORTED_MEDIA_TYPE') return errorResponse('', 415);
-    if (error.message === 'PAYLOAD_TOO_LARGE') return errorResponse('', 413);
-    if (error.message === 'INVALID_JSON') return errorResponse('', 400);
-    return json({ ok: false, error: '질문 등록에 실패했습니다.' }, 500);
+    const code = String(error?.message || '');
+    if (code === 'UNSUPPORTED_MEDIA_TYPE') return errorResponse('', 415);
+    if (code === 'PAYLOAD_TOO_LARGE') return errorResponse('', 413);
+    if (code === 'INVALID_JSON') return errorResponse('', 400);
+    if (code === 'BOARD_STORE_NOT_CONFIGURED') return errorResponse(code, 503);
+    if (code === 'BOARD_STORE_WRITE_FAILED') return errorResponse(code, 503);
+    return json({ ok: false, code: 'BOARD_STORE_WRITE_FAILED', error: '질문 저장에 실패했습니다. 잠시 후 다시 등록해주세요.' }, 500);
   }
 }
