@@ -17,6 +17,14 @@ function mergeDaily(posts) {
 }
 
 export async function onRequest(context) {
+  try {
+    if (!context.env.BOARD_POSTS && context.env.SECURITY_STORE) {
+      context.env.BOARD_POSTS = context.env.SECURITY_STORE;
+    }
+  } catch (error) {
+    // Client fallback handles environments whose binding object is immutable.
+  }
+
   const response = await context.next();
   const url = new URL(context.request.url);
 
