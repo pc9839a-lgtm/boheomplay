@@ -1,4 +1,5 @@
 import { publicFallbackResponse } from './_board-fallback.js';
+import { purgeUserBoardPostsOnce } from './_purge-user-posts.js';
 
 const SITE='https://boheomplay.pagero.kr';
 const OG=`${SITE}/og-image`;
@@ -11,7 +12,8 @@ function patchHtml(html){
   let out=html
     .replaceAll('https://boheomplay.pages.dev',SITE)
     .replaceAll(`${SITE}/og-image.jpg`,OG)
-    .replaceAll('/assets/js/config.js?v=20260710-center-sections','/assets/js/config.js?v=20260715-board-router-v2');
+    .replaceAll('/assets/js/config.js?v=20260710-center-sections','/assets/js/config.js?v=20260715-user-post-purge-v1')
+    .replaceAll('/assets/js/config.js?v=20260715-board-router-v2','/assets/js/config.js?v=20260715-user-post-purge-v1');
   if(!out.includes('property="og:image"')) out=out.replace('</head>',`<meta property="og:image" content="${OG}"/><meta property="og:image:secure_url" content="${OG}"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta property="og:image:type" content="image/jpeg"/><meta name="twitter:image" content="${OG}"/>${CORE_SCRIPTS}${BOARD_SCRIPT}</head>`);
   else {
     if(!out.includes('/assets/js/consent-all.js')) out=out.replace('</head>',`${CORE_SCRIPTS}</head>`);
@@ -38,6 +40,8 @@ function secure(headers,path,method){
 }
 
 export async function onRequest(context){
+  await purgeUserBoardPostsOnce(context.env);
+
   const url=new URL(context.request.url);
   const isPublicBoardPost=context.request.method==='POST'&&url.pathname==='/api/board-posts';
   let boardInput={};
