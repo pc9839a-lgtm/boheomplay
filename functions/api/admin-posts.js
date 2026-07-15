@@ -1,17 +1,6 @@
 import { requireAdmin, json } from '../_admin-auth.js';
-import { listBoardPosts } from '../_board.js';
 
-const RECENT_COOKIE = 'bp_recent_board';
-const POST_PREFIX = 'board:post:';
-
-function getCookie(request, name) {
-  const raw = request.headers.get('cookie') || '';
-  for (const part of raw.split(';')) {
-    const [key, ...rest] = part.trim().split('=');
-    if (key === name) return decodeURIComponent(rest.join('=') || '');
-  }
-  return '';
-}
+const STORE_KEY = 'board:all-posts:v2';
 
 function displayTime(createdAt) {
   if (!createdAt) return '방금 전';
@@ -35,34 +24,13 @@ function toAdmin(post) {
   };
 }
 
-async function readRecent(request, env) {
-  const slug = getCookie(request, RECENT_COOKIE);
-  if (!slug || !env.BOARD_POSTS) return null;
-  try {
-    const raw = await env.BOARD_POSTS.get(`${POST_PREFIX}${slug}`);
-    const post = raw ? JSON.parse(raw) : null;
-    return post && !post.deleted ? toAdmin(post) : null;
-  } catch (error) {
-    return null;
-  }
-}
-
-function mergePosts(recent, posts) {
-  const seen = new Set();
-  return [recent, ...(Array.isArray(posts) ? posts : [])].filter((post) => {
-    const key = post?.slug || post?.id;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 export async function onRequestGet({ request, env }) {
   if (!(await requireAdmin(request, env))) {
     return json({ ok: false, error: '관리자 로그인이 만료되었습니다.' }, 401);
   }
 
-  if (!env.BOARD_POSTS) {
+  const kv = env?.BOARD_POSTS || env?.SECURITY_STORE || null;
+  if (!kv) {
     return json({
       ok: false,
       code: 'BOARD_STORE_NOT_CONFIGURED',
@@ -71,23 +39,27 @@ export async function onRequestGet({ request, env }) {
     }, 503);
   }
 
-  const recent = await readRecent(request, env);
-
   try {
-    const posts = await listBoardPosts(env, { publicOnly: false });
+    const raw = await kv.get(STORE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    const posts = (Array.isArray(parsed) ? parsed : [])
+      .filter((post) => post && !post.deleted && post.slug)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+      .map(toAdmin);
+
     return json({
       ok: true,
       storageConfigured: true,
-      posts: mergePosts(recent, posts)
+      storageKey: STORE_KEY,
+      postCount: posts.length,
+      posts
     });
   } catch (error) {
-    if (recent) {
-      return json({ ok: true, storageConfigured: true, posts: [recent] });
-    }
     return json({
       ok: false,
-      code: String(error?.message || 'BOARD_STORE_READ_FAILED'),
-      error: '게시판 저장소에는 연결됐지만 질문 목록을 읽지 못했습니다.',
+      code: 'BOARD_STORE_READ_FAILED',
+      detail: String(error?.message || 'UNKNOWN_ERROR'),
+      error: '게시판 저장소에서 질문 목록을 읽지 못했습니다.',
       posts: []
     }, 500);
   }
