@@ -5,7 +5,8 @@ window.APP_CONFIG = {
 
 (function loadQuestionEnhancements(){
   [
-    '/assets/js/consent-all.js?v=20260715-v2'
+    '/assets/js/consent-all.js?v=20260715-v2',
+    '/assets/js/board-ui-restore.js?v=20260715-board-restore-v13'
   ].forEach((src)=>{
     if(document.querySelector(`script[src^="${src.split('?')[0]}"]`)) return;
     const script=document.createElement('script');
