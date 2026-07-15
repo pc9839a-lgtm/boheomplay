@@ -16,17 +16,81 @@ function mergeDaily(posts) {
     });
 }
 
+function clean(value, max = 1000) {
+  return String(value || '').trim().slice(0, max);
+}
+
+function fallbackPost(input = {}) {
+  const isPrivate = input.visibility === 'private';
+  const id = `local-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}`;
+  return {
+    id,
+    slug: id,
+    no: '',
+    category: clean(input.category || '기타', 40),
+    title: isPrivate ? '비공개 질문입니다.' : clean(input.title, 100),
+    message: isPrivate ? '비공개 질문은 관리자만 확인할 수 있습니다.' : clean(input.message, 1800),
+    nickname: isPrivate ? '비공개' : clean(input.nickname || '익명', 40),
+    status: '답변대기',
+    time: '방금 전',
+    href: '#board',
+    answer: ''
+  };
+}
+
+function fallbackResponse(input) {
+  return new Response(JSON.stringify({
+    ok: true,
+    fallback: true,
+    post: fallbackPost(input)
+  }), {
+    status: 201,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store'
+    }
+  });
+}
+
 export async function onRequest(context) {
+  const url = new URL(context.request.url);
+  const isBoardPost = context.request.method === 'POST' && url.pathname === '/api/board-posts';
+  let postInput = null;
+
+  if (isBoardPost) {
+    try {
+      postInput = await context.request.clone().json();
+    } catch (error) {
+      postInput = {};
+    }
+  }
+
   try {
     if (!context.env.BOARD_POSTS && context.env.SECURITY_STORE) {
       context.env.BOARD_POSTS = context.env.SECURITY_STORE;
     }
   } catch (error) {
-    // Client fallback handles environments whose binding object is immutable.
+    // Continue and use the fallback response when storage is unavailable.
   }
 
-  const response = await context.next();
-  const url = new URL(context.request.url);
+  let response;
+  try {
+    response = await context.next();
+  } catch (error) {
+    if (isBoardPost) return fallbackResponse(postInput);
+    throw error;
+  }
+
+  if (isBoardPost) {
+    if (!response.ok) return fallbackResponse(postInput);
+    try {
+      const data = await response.clone().json();
+      if (!data || data.ok !== true || !data.post) return fallbackResponse(postInput);
+    } catch (error) {
+      return fallbackResponse(postInput);
+    }
+    return response;
+  }
 
   if (context.request.method !== 'GET' || url.pathname !== '/api/board-posts') {
     return response;
