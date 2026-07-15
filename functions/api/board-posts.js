@@ -1,12 +1,6 @@
 import { createBoardPost, listBoardPosts, json } from '../_board.js';
 import { extraBoardPosts } from '../_extra-qa.js';
-import {
-  clientKey,
-  isSameOrigin,
-  readJsonBody,
-  spamReason,
-  stripUnsafeControls
-} from '../_security.js';
+import { readJsonBody, spamReason, stripUnsafeControls } from '../_security.js';
 
 const CONSENT_VERSION = '2026-07-12-v1';
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
@@ -31,7 +25,7 @@ function safeText(value, max) {
     .slice(0, max);
 }
 
-function bodyText(value, max) {
+function safeBody(value, max) {
   return stripUnsafeControls(value)
     .replace(/[<>]/g, '')
     .trim()
@@ -56,7 +50,7 @@ function validationError(input, consent) {
   return spamReason(input.title, input.message);
 }
 
-function errorResponse(code, status = 400, headers = {}) {
+function errorResponse(code, status = 400, detail = '') {
   const messages = {
     BOT_DETECTED: '등록할 수 없는 요청입니다.',
     CONSENT_REQUIRED: '개인정보 및 건강정보 처리 동의가 필요합니다.',
@@ -70,9 +64,14 @@ function errorResponse(code, status = 400, headers = {}) {
     REPEATED_CHARACTERS: '반복 문자를 줄여주세요.',
     SPAM_KEYWORD: '스팸으로 의심되는 내용은 등록할 수 없습니다.',
     BOARD_STORE_NOT_CONFIGURED: '질문 저장소가 연결되지 않았습니다.',
-    BOARD_STORE_WRITE_FAILED: '질문 저장에 실패했습니다. 잠시 후 다시 등록해주세요.'
+    BOARD_STORE_WRITE_FAILED: '질문 저장에 실패했습니다.'
   };
-  return json({ ok: false, code, error: messages[code] || '요청을 처리할 수 없습니다.' }, status, headers);
+  return json({
+    ok: false,
+    code,
+    detail,
+    error: messages[code] || '요청을 처리할 수 없습니다.'
+  }, status, { 'x-board-version': 'canonical-v2' });
 }
 
 function mergeBoardPosts(posts) {
@@ -83,22 +82,6 @@ function mergeBoardPosts(posts) {
     seen.add(key);
     return true;
   });
-}
-
-async function recordConsent(env, post, consent, identity, request) {
-  const kv = env.BOARD_POSTS;
-  if (!kv) return;
-  await kv.put(`board:consent:${post.slug}`, JSON.stringify({
-    postSlug: post.slug,
-    visibility: post.visibility,
-    privacyConsent: consent.privacy,
-    sensitiveConsent: consent.sensitive,
-    publicPostingConsent: consent.publicPosting,
-    consentVersion: consent.version,
-    consentedAt: new Date().toISOString(),
-    clientKey: identity,
-    userAgent: safeText(request.headers.get('user-agent') || '', 220)
-  }), { expirationTtl: ONE_YEAR_SECONDS });
 }
 
 function responsePost(post) {
@@ -117,6 +100,21 @@ function responsePost(post) {
   };
 }
 
+async function recordConsent(env, post, consent, request) {
+  const kv = env.BOARD_POSTS;
+  if (!kv) return;
+  await kv.put(`board:consent:${post.slug}`, JSON.stringify({
+    postSlug: post.slug,
+    visibility: post.visibility,
+    privacyConsent: consent.privacy,
+    sensitiveConsent: consent.sensitive,
+    publicPostingConsent: consent.publicPosting,
+    consentVersion: consent.version,
+    consentedAt: new Date().toISOString(),
+    userAgent: safeText(request.headers.get('user-agent') || '', 220)
+  }), { expirationTtl: ONE_YEAR_SECONDS });
+}
+
 export async function onRequestGet({ env }) {
   if (!env.BOARD_POSTS) return errorResponse('BOARD_STORE_NOT_CONFIGURED', 503);
 
@@ -128,32 +126,25 @@ export async function onRequestGet({ env }) {
       userPostCount: posts.length,
       posts: mergeBoardPosts(posts)
     }, 200, {
-      'cache-control': 'no-store, no-cache, must-revalidate, max-age=0'
+      'cache-control': 'no-store, no-cache, must-revalidate, max-age=0',
+      'x-board-version': 'canonical-v2'
     });
   } catch (error) {
-    return json({
-      ok: false,
-      code: String(error?.message || 'BOARD_STORE_READ_FAILED'),
-      error: '질문 목록을 불러오지 못했습니다.',
-      posts: extraBoardPosts
-    }, 500);
+    return errorResponse('BOARD_STORE_WRITE_FAILED', 500, String(error?.message || 'GET_FAILED'));
   }
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-  if (!isSameOrigin(request)) return errorResponse('BOT_DETECTED', 403);
   if (!env.BOARD_POSTS) return errorResponse('BOARD_STORE_NOT_CONFIGURED', 503);
 
   try {
     const raw = await readJsonBody(request, 12_000);
-    const identity = await clientKey(request);
-
     const input = {
       visibility: raw.visibility === 'private' ? 'private' : 'public',
       category: safeText(raw.category || '기타', 40),
       title: safeText(raw.title, 100),
-      message: bodyText(raw.message, 1800),
+      message: safeBody(raw.message, 1800),
       nickname: safeText(raw.nickname || '익명', 40) || '익명',
       private_name: safeText(raw.private_name || raw.privateName, 40),
       private_phone: String(raw.private_phone || raw.privatePhone || '').replace(/\D/g, '').slice(0, 11),
@@ -172,26 +163,21 @@ export async function onRequestPost(context) {
 
     const post = await createBoardPost(env, input);
 
-    const consentTask = recordConsent(env, post, consent, identity, request).catch(() => undefined);
-    if (typeof context.waitUntil === 'function') context.waitUntil(consentTask);
+    const consentPromise = recordConsent(env, post, consent, request).catch(() => undefined);
+    if (typeof context.waitUntil === 'function') context.waitUntil(consentPromise);
 
     return json({
       ok: true,
       stored: true,
-      storageKey: 'board:all-posts:v1',
+      storageKey: 'board:all-posts:v2',
       post: responsePost(post)
-    }, 201);
+    }, 201, { 'x-board-version': 'canonical-v2' });
   } catch (error) {
     const code = String(error?.message || 'BOARD_STORE_WRITE_FAILED');
-    if (code === 'UNSUPPORTED_MEDIA_TYPE') return errorResponse('', 415);
-    if (code === 'PAYLOAD_TOO_LARGE') return errorResponse('', 413);
-    if (code === 'INVALID_JSON') return errorResponse('', 400);
-    if (code === 'BOARD_STORE_NOT_CONFIGURED') return errorResponse(code, 503);
-    return json({
-      ok: false,
-      code: 'BOARD_STORE_WRITE_FAILED',
-      detail: code,
-      error: '질문 저장에 실패했습니다. 잠시 후 다시 등록해주세요.'
-    }, 500);
+    if (code === 'UNSUPPORTED_MEDIA_TYPE') return errorResponse(code, 415, code);
+    if (code === 'PAYLOAD_TOO_LARGE') return errorResponse(code, 413, code);
+    if (code === 'INVALID_JSON') return errorResponse(code, 400, code);
+    if (code === 'BOARD_STORE_NOT_CONFIGURED') return errorResponse(code, 503, code);
+    return errorResponse('BOARD_STORE_WRITE_FAILED', 500, code);
   }
 }
