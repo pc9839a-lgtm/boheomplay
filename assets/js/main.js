@@ -166,7 +166,7 @@
           body: JSON.stringify(payload)
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok || !data.ok || !data.post) {
+        if (!response.ok || !data.ok || data.stored !== true || !data.post) {
           throw new Error(data.error || '질문 저장에 실패했습니다.');
         }
 
@@ -176,7 +176,7 @@
         sendBackupToAppsScript(payload);
 
         if (payload.visibility === 'private') {
-          setResult('비공개 질문이 등록되었습니다. 관리자 화면에서 확인할 수 있습니다.', 'success');
+          setResult('비공개 질문이 저장되었습니다. 관리자 화면에서 확인할 수 있습니다.', 'success');
           return;
         }
 
@@ -187,7 +187,7 @@
           item.classList.toggle('is-active', item.dataset.filter === '전체');
         });
         renderBoard();
-        setResult('질문이 등록되었습니다. 질문 목록 최상단에서 확인할 수 있습니다.', 'success');
+        setResult('질문이 저장되었습니다. 질문 목록 최상단에서 확인할 수 있습니다.', 'success');
         document.getElementById('board')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
         console.error('[boheomplay] board save failed', error);
