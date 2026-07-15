@@ -24,11 +24,16 @@
     }
 
     all.addEventListener('change', () => {
-      requiredInputs().forEach((input) => {
-        input.checked = all.checked;
+      const checked = all.checked;
+      const required = requiredInputs();
+      required.forEach((input) => {
+        input.checked = checked;
+      });
+      required.forEach((input) => {
         input.dispatchEvent(new Event('change', { bubbles: true }));
       });
-      syncAll();
+      all.checked = checked;
+      all.indeterminate = false;
     });
 
     inputs.forEach((input) => input.addEventListener('change', syncAll));
