@@ -1,7 +1,5 @@
 import { extraBoardPosts } from '../_extra-qa.js';
-import { dailyBoardPosts20260713 } from '../_qa-2026-07-13.js';
-import { dailyBoardPosts20260714 } from '../_qa-2026-07-14.js';
-import { dailyBoardPosts20260715 } from '../_qa-2026-07-15.js';
+import { dailyQuestions } from '../_daily-questions.js';
 
 const STORE_KEY = 'board:all-posts:v2';
 
@@ -44,6 +42,22 @@ function publicPost(post) {
   };
 }
 
+function dailyPost(item) {
+  return {
+    id: item.slug,
+    slug: item.slug,
+    no: item.no,
+    category: item.cn || '생명보험',
+    title: item.title,
+    message: Array.isArray(item.q) ? item.q.join('\n\n') : String(item.q || ''),
+    nickname: '익명',
+    status: '답변완료',
+    time: String(item.updatedAt || '').replaceAll('-', '.'),
+    href: `/q/${item.slug}`,
+    answer: Array.isArray(item.a) ? item.a.join('\n\n') : String(item.a || '')
+  };
+}
+
 function mergePosts(...groups) {
   const seen = new Set();
   return groups.flat().filter((post) => {
@@ -75,9 +89,7 @@ export async function onRequestGet({ env }) {
 
   const posts = mergePosts(
     userPosts,
-    dailyBoardPosts20260715,
-    dailyBoardPosts20260714,
-    dailyBoardPosts20260713,
+    dailyQuestions.map(dailyPost),
     extraBoardPosts
   );
 
