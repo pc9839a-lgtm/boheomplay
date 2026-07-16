@@ -1,31 +1,19 @@
 {
   "version": 1,
-  "updatedAt": "2026-07-15",
-  "companySlugs": [
-    "hanwha-life",
-    "abl-life",
-    "samsung-life",
-    "heungkuk-life",
-    "kyobo-life",
-    "im-life",
-    "miraeasset-life",
-    "kdb-life",
-    "db-life",
-    "tongyang-life",
-    "metlife-korea",
-    "kb-life",
-    "shinhan-life",
-    "chubb-life",
-    "hana-life",
-    "bnp-paribas-cardif-life",
-    "fubon-hyundai-life",
-    "lina-life",
-    "aia-life",
-    "nh-life",
-    "ibk-pension",
-    "kyobo-lifeplanet"
+  "updatedAt": "2026-07-16",
+  "companySlugs": ["hanwha-life","abl-life","samsung-life","heungkuk-life","kyobo-life","im-life","miraeasset-life","kdb-life","db-life","tongyang-life","metlife-korea","kb-life","shinhan-life","chubb-life","hana-life","bnp-paribas-cardif-life","fubon-hyundai-life","lina-life","aia-life","nh-life","ibk-pension","kyobo-lifeplanet"],
+  "products": [
+    {"slug":"aia-global-power-dollar-annuity","name":"(무)AIA 글로벌 파워 미국달러 연금보험 (1형 연금강화형_최저계약자적립액 보증형)","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/saving/non-par-aia-global-power-us-dollar-annuity.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-dollar-annuity-ii","name":"(무)AIA 달러로 받는 연금보험 II (10년 이율 확정형)","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/saving/non-par-aia-dollar-annuity.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-global-legacy-dollar-inheritance-whole-life","name":"(무)AIA 글로벌 레거시 미국달러 상속종신보험","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-aia-global-legacy-us-dollar-inheritance-whole-life.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-ceo-term-life","name":"(무)AIA 안심+ 경영인 정기보험 (해약환급금 일부지급형)","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-ceo-term-life.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-prime-dollar-whole-life","name":"(무)AIA 안심+ 프라임 달러 종신보험(해약환급금 50% 지급형)","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-aia-peace-of-mind-prime-dollar-whole-life-csv-50type.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-universal-whole-life","name":"(무)AIA 평생 안심+ 유니버셜 종신보험","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-universal-whole-life.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-simplified-health-renewal","name":"(무)AIA 더 안심되는 초간편 건강보험 (갱신형)","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/critical-illness/non-par-aia-305-simplified-issued-health-plan-renewal.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-build-your-own-comprehensive","name":"(무)AIA 내가 조립하는 종합보장보험","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/medical-protection/non-par-aiavitality-i-assemble-comprehensive-health-plan.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-health-plus-cancer-renewal","name":"(무)AIA 건강+ 암보험(갱신형)","companyName":"AIA생명","companySlug":"aia-life","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/medical-protection/non-par-health-plus-cancer-plan-renewal-bb.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"metlife-dollar-whole-life-plus","name":"(무)백만인을 위한 달러종신보험 Plus [저해약환급금형]","companyName":"메트라이프생명","companySlug":"metlife-korea","status":"판매중 확인","verifiedAt":"2026-07-16","verifiedSources":["https://www.emetlife.kr/USDwholelife/","https://brand.metlife.co.kr/pn/paReal/main.do","https://www.klia.or.kr/klia/company/member/list.do"]}
   ],
-  "products": [],
   "publishedQuestions": [
     {"slug":"hanwha-life-policyholder-change-documents","title":"한화생명 보험 계약자를 가족으로 변경하려면 어떤 서류를 확인해야 하나요?","searchIntent":"한화생명 계약자 변경 절차와 필요 서류 확인","companyName":"한화생명","companySlug":"hanwha-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.hanwhalife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
     {"slug":"abl-life-claim-documents-check","title":"ABL생명 사고보험금 청구 전에 준비할 서류는 어디서 확인하나요?","searchIntent":"ABL생명 사고보험금 청구 구비서류와 접수 방법 확인","companyName":"ABL생명","companySlug":"abl-life","productName":null,"publishedAt":"2026-07-13","verifiedAt":"2026-07-13","verifiedSources":["https://www.abllife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
@@ -56,12 +44,22 @@
     {"slug":"kyobo-life-premium-payment-frequency-change","title":"교보생명 보험료 납입주기를 월납에서 연납으로 바꿀 수 있나요?","searchIntent":"교보생명 보험료 납입주기 월납 연납 변경 가능 여부 적용시점 확인","companyName":"교보생명","companySlug":"kyobo-life","productName":null,"publishedAt":"2026-07-15","verifiedAt":"2026-07-15","verifiedSources":["https://www.kyobo.com","https://www.klia.or.kr/klia/company/member/list.do"]},
     {"slug":"im-life-insurance-period-payment-period-check","title":"iM라이프생명 보험기간과 보험료 납입기간이 다르게 표시되면 무엇을 확인해야 하나요?","searchIntent":"iM라이프생명 보험기간 납입기간 차이와 계약 보장종료일 확인","companyName":"iM라이프생명","companySlug":"im-life","productName":null,"publishedAt":"2026-07-15","verifiedAt":"2026-07-15","verifiedSources":["https://www.dgbfnlife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
     {"slug":"miraeasset-life-variable-partial-withdrawal-impact","title":"미래에셋생명 변액보험 중도인출 전에 적립금과 보장 영향을 어떻게 확인하나요?","searchIntent":"미래에셋생명 변액보험 중도인출 적립금 보장 계약유지 영향 확인","companyName":"미래에셋생명","companySlug":"miraeasset-life","productName":null,"publishedAt":"2026-07-15","verifiedAt":"2026-07-15","verifiedSources":["https://life.miraeasset.com","https://www.klia.or.kr/klia/company/member/list.do"]},
-    {"slug":"kdb-life-surrender-value-estimate-difference","title":"KDB생명 해지환급금 예상액과 실제 지급액이 달라질 수 있는 이유는 무엇인가요?","searchIntent":"KDB생명 해지환급금 예상액 실제 지급액 차이와 공제내역 확인","companyName":"KDB생명","companySlug":"kdb-life","productName":null,"publishedAt":"2026-07-15","verifiedAt":"2026-07-15","verifiedSources":["https://www.kdblife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]}
+    {"slug":"kdb-life-surrender-value-estimate-difference","title":"KDB생명 해지환급금 예상액과 실제 지급액이 달라질 수 있는 이유는 무엇인가요?","searchIntent":"KDB생명 해지환급금 예상액 실제 지급액 차이와 공제내역 확인","companyName":"KDB생명","companySlug":"kdb-life","productName":null,"publishedAt":"2026-07-15","verifiedAt":"2026-07-15","verifiedSources":["https://www.kdblife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-global-power-dollar-annuity-guarantee-check","title":"AIA생명 (무)AIA 글로벌 파워 미국달러 연금보험의 계약자적립액 보증 기준은 어떻게 확인하나요?","searchIntent":"AIA생명 글로벌 파워 미국달러 연금보험 계약자적립액 보증 시점과 적용 조건 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 글로벌 파워 미국달러 연금보험 (1형 연금강화형_최저계약자적립액 보증형)","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/saving/non-par-aia-global-power-us-dollar-annuity.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-dollar-annuity-ii-withdrawal-check","title":"AIA생명 (무)AIA 달러로 받는 연금보험 II의 중도인출 조건은 어떻게 확인하나요?","searchIntent":"AIA생명 달러로 받는 연금보험 II 중도인출 시점 한도 수수료와 연금 영향 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 달러로 받는 연금보험 II (10년 이율 확정형)","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/saving/non-par-aia-dollar-annuity.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-global-legacy-dollar-inheritance-benefit-check","title":"AIA생명 (무)AIA 글로벌 레거시 미국달러 상속종신보험의 사망보험금 지급 통화는 어떻게 확인하나요?","searchIntent":"AIA생명 글로벌 레거시 미국달러 상속종신보험 사망보험금 지급 통화 수익자 조건 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 글로벌 레거시 미국달러 상속종신보험","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-aia-global-legacy-us-dollar-inheritance-whole-life.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-ceo-term-life-contract-purpose-check","title":"AIA생명 (무)AIA 안심+ 경영인 정기보험은 법인 계약에서 무엇을 구분해 확인해야 하나요?","searchIntent":"AIA생명 안심 플러스 경영인 정기보험 법인 계약 당사자 보장기간 환급금 세무 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 안심+ 경영인 정기보험 (해약환급금 일부지급형)","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-ceo-term-life.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-prime-dollar-whole-life-exchange-risk-check","title":"AIA생명 (무)AIA 안심+ 프라임 달러 종신보험의 환율 변동과 해약환급금은 어떻게 확인하나요?","searchIntent":"AIA생명 안심 플러스 프라임 달러 종신보험 환율 변동 해약환급금 50퍼센트 지급형 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 안심+ 프라임 달러 종신보험(해약환급금 50% 지급형)","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-aia-peace-of-mind-prime-dollar-whole-life-csv-50type.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-universal-whole-life-flexibility-check","title":"AIA생명 (무)AIA 평생 안심+ 유니버셜 종신보험의 추가납입·중도인출 전 무엇을 확인해야 하나요?","searchIntent":"AIA생명 평생 안심 플러스 유니버셜 종신보험 추가납입 중도인출 계약유지 영향 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 평생 안심+ 유니버셜 종신보험","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/life-protection/non-par-universal-whole-life.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-simplified-health-renewal-disclosure-check","title":"AIA생명 (무)AIA 더 안심되는 초간편 건강보험(갱신형)의 고지 질문과 갱신 조건은 어떻게 확인하나요?","searchIntent":"AIA생명 더 안심되는 초간편 건강보험 갱신형 고지 질문 일반심사 비교 갱신 조건 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 더 안심되는 초간편 건강보험 (갱신형)","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/critical-illness/non-par-aia-305-simplified-issued-health-plan-renewal.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-build-your-own-coverage-rider-check","title":"AIA생명 (무)AIA 내가 조립하는 종합보장보험의 선택 특약과 보장기간은 어떻게 정리하나요?","searchIntent":"AIA생명 내가 조립하는 종합보장보험 선택 특약 갱신형 비갱신형 보장기간 중복 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 내가 조립하는 종합보장보험","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/medical-protection/non-par-aiavitality-i-assemble-comprehensive-health-plan.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"aia-health-plus-cancer-renewal-coverage-check","title":"AIA생명 (무)AIA 건강+ 암보험(갱신형)의 암 분류와 갱신 조건은 무엇을 확인해야 하나요?","searchIntent":"AIA생명 건강 플러스 암보험 갱신형 일반암 유사암 특약 갱신 조건 확인","companyName":"AIA생명","companySlug":"aia-life","productName":"(무)AIA 건강+ 암보험(갱신형)","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.aia.co.kr/ko/products/medical-protection/non-par-health-plus-cancer-plan-renewal-bb.html","https://www.aia.co.kr/ko/disclosure/our-products/individual.html","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"metlife-dollar-whole-life-plus-currency-check","title":"메트라이프생명 (무)백만인을 위한 달러종신보험 Plus의 원화 납입·달러 보장 내역은 어떻게 확인하나요?","searchIntent":"메트라이프생명 백만인을 위한 달러종신보험 Plus 원화 납입 달러 보험금 환율 해약환급금 확인","companyName":"메트라이프생명","companySlug":"metlife-korea","productName":"(무)백만인을 위한 달러종신보험 Plus [저해약환급금형]","publishedAt":"2026-07-16","verifiedAt":"2026-07-16","verifiedSources":["https://www.emetlife.kr/USDwholelife/","https://brand.metlife.co.kr/pn/paReal/main.do","https://www.klia.or.kr/klia/company/member/list.do"]}
   ],
   "rules": {
     "dailyQuestionCount": 10,
-    "duplicateFields": ["slug", "title", "searchIntent", "companyName", "productName"],
-    "requiredVerification": ["officialCompanySite", "lifeInsuranceAssociation", "officialDisclosure"],
-    "prohibitedClaims": ["best", "lowest", "guaranteed", "recommended", "affiliated"]
+    "duplicateFields": ["slug","title","searchIntent","companyName","productName"],
+    "requiredVerification": ["officialCompanySite","lifeInsuranceAssociation","officialDisclosure"],
+    "prohibitedClaims": ["best","lowest","guaranteed","recommended","affiliated"]
   }
 }
