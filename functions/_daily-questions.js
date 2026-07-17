@@ -3,10 +3,12 @@ import { dailyQuestions20260714 } from './_qa-2026-07-14.js';
 import { dailyQuestions20260715 } from './_qa-2026-07-15.js';
 import { dailyQuestions20260716 } from './_qa-2026-07-16.js';
 import { dailyQuestions20260717 } from './_qa-2026-07-17.js';
+import { dailyQuestions20260718 } from './_qa-2026-07-18.js';
 
 const withDate = (items, updatedAt) => items.map((item) => ({ ...item, updatedAt }));
 
 export const dailyQuestions = [
+  ...withDate(dailyQuestions20260718, '2026-07-18'),
   ...withDate(dailyQuestions20260717, '2026-07-17'),
   ...withDate(dailyQuestions20260716, '2026-07-16'),
   ...withDate(dailyQuestions20260715, '2026-07-15'),
