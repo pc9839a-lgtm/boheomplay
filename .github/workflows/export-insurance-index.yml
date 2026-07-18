@@ -1,0 +1,25 @@
+name: Export insurance index
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Upload source files
+        uses: actions/upload-artifact@v4
+        with:
+          name: insurance-index-source
+          path: |
+            content/insurance-seo-index.json
+            functions/_qa-2026-07-19.js
+            functions/sitemap.xml.js
+          if-no-files-found: error
