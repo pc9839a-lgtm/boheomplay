@@ -17,9 +17,16 @@ jobs:
       - name: Upload source files
         uses: actions/upload-artifact@v4
         with:
-          name: insurance-index-source
+          name: insurance-repo-snapshot
           path: |
             content/insurance-seo-index.json
-            functions/_qa-2026-07-19.js
+            functions/_content.js
+            functions/_extra-qa.js
+            functions/_daily-questions.js
+            functions/_qa-*.js
+            functions/_insurance-directory.js
+            functions/_unified-question.js
+            functions/q/[slug].js
+            functions/q/_middleware.js
             functions/sitemap.xml.js
           if-no-files-found: error
