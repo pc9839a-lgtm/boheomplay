@@ -1,4 +1,4 @@
-name: Export insurance index
+name: Finalize insurance publication
 
 on:
   pull_request:
@@ -6,27 +6,27 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  export:
+  finalize:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out pull request branch
         uses: actions/checkout@v4
-      - name: Upload source files
-        uses: actions/upload-artifact@v4
         with:
-          name: insurance-repo-snapshot
-          path: |
-            content/insurance-seo-index.json
-            functions/_content.js
-            functions/_extra-qa.js
-            functions/_daily-questions.js
-            functions/_qa-*.js
-            functions/_insurance-directory.js
-            functions/_unified-question.js
-            functions/q/[slug].js
-            functions/q/_middleware.js
-            functions/sitemap.xml.js
-          if-no-files-found: error
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Validate and update index
+        run: python scripts/finalize-insurance-2026-07-19.py
+      - name: Commit generated files
+        run: |
+          if git diff --quiet -- content/insurance-seo-index.json functions/sitemap.xml.js; then
+            echo "No generated changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/insurance-seo-index.json functions/sitemap.xml.js
+          git commit -m "Finalize insurance SEO index for 2026-07-19"
+          git push origin HEAD:${{ github.head_ref }}
