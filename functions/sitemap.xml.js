@@ -5,7 +5,7 @@ import { lifeCompanies, insuranceProducts } from './_insurance-directory.js';
 import { listBoardPosts } from './_board.js';
 
 const SITE_URL = 'https://boheomplay.pagero.kr';
-const LAST_UPDATED = '2026-07-18';
+const LAST_UPDATED = '2026-07-19';
 const escXml = (value) => String(value).replace(/[&<>\"]/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[char]));
 const url = (path) => `${SITE_URL}${path}`;
 
