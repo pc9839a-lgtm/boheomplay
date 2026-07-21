@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "verifiedAt": "2026-07-22",
+  "associationUrl": "https://www.klia.or.kr/klia/company/member/list.do",
+  "questions": [
+    {"slug":"abl-life-policy-loan-full-repayment-record-check","title":"ABL생명 보험계약대출을 전액 상환한 뒤 상환내역과 계약 상태는 어떻게 확인하나요?","searchIntent":"ABL생명 보험계약대출 전액 상환 처리일 이자 정산 잔액과 계약 상태 확인","companySlug":"abl-life","companyName":"ABL생명","officialSources":["https://www.abllife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"im-life-autopay-holiday-withdrawal-date-check","title":"iM라이프생명 보험료 자동이체일이 휴일이면 언제 출금되는지 어떻게 확인하나요?","searchIntent":"iM라이프생명 보험료 자동이체일 공휴일 주말 출금일 미납 처리 기준 확인","companySlug":"im-life","companyName":"iM라이프생명","officialSources":["https://www.dgbfnlife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"shinhan-life-claim-cancel-resubmit-check","title":"신한라이프 보험금 청구를 취소하고 다시 접수할 때 무엇을 확인해야 하나요?","searchIntent":"신한라이프 보험금 청구 취소 재접수 접수번호 서류 중복과 심사기간 확인","companySlug":"shinhan-life","companyName":"신한라이프","officialSources":["https://www.shinhanlife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"hanwha-life-renewal-premium-notice-timing-check","title":"한화생명 갱신형 특약의 새 보험료와 갱신일은 언제 확인할 수 있나요?","searchIntent":"한화생명 갱신형 특약 갱신일 새 보험료 안내시점 보험기간과 납입방법 확인","companySlug":"hanwha-life","companyName":"한화생명","officialSources":["https://www.hanwhalife.com","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"ibk-pension-payment-cycle-change-after-start","title":"IBK연금보험 연금 수령을 시작한 뒤 지급주기를 변경할 수 있는지 어떻게 확인하나요?","searchIntent":"IBK연금보험 연금개시 후 월 연 분기 지급주기 변경 가능시점과 지급계좌 확인","companySlug":"ibk-pension","companyName":"IBK연금보험","officialSources":["https://www.ibki.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"kyobo-lifeplanet-cooling-off-refund-status-check","title":"교보라이프플래닛 온라인 보험 청약철회 후 환급 진행상태는 어떻게 확인하나요?","searchIntent":"교보라이프플래닛 온라인 보험 청약철회 접수일 환급계좌 환급금 처리상태 확인","companySlug":"kyobo-lifeplanet","companyName":"교보라이프플래닛","officialSources":["https://www.lifeplanet.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"kdb-life-reinstatement-underwriting-documents-check","title":"KDB생명 실효 계약을 부활할 때 건강고지와 심사서류는 어떻게 확인하나요?","searchIntent":"KDB생명 실효계약 부활 건강고지 미납보험료 심사서류와 부활 승인일 확인","companySlug":"kdb-life","companyName":"KDB생명","officialSources":["https://www.kdblife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"heungkuk-life-benefit-decision-letter-reissue","title":"흥국생명 보험금 지급결정서를 다시 발급받으려면 무엇을 확인해야 하나요?","searchIntent":"흥국생명 보험금 지급결정서 재발급 접수번호 지급사유 공제내역 발급경로 확인","companySlug":"heungkuk-life","companyName":"흥국생명","officialSources":["https://www.heungkuklife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"hana-life-policy-loan-unpaid-interest-check","title":"하나생명 보험계약대출 이자를 납부하지 못했을 때 잔액은 어떻게 확인하나요?","searchIntent":"하나생명 보험계약대출 이자 미납 원금 가산 여부 대출잔액과 계약 영향 확인","companySlug":"hana-life","companyName":"하나생명","officialSources":["https://www.hanalife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]},
+    {"slug":"chubb-life-overseas-claim-original-documents-check","title":"처브라이프생명 해외 체류 중 보험금 청구 시 원본서류 제출 여부는 어떻게 확인하나요?","searchIntent":"처브라이프생명 해외 체류 보험금 청구 외국어 의료서류 번역 공증 원본 제출 확인","companySlug":"chubb-life","companyName":"처브라이프생명","officialSources":["https://www.chubblife.co.kr","https://www.klia.or.kr/klia/company/member/list.do"]}
+  ]
+}
