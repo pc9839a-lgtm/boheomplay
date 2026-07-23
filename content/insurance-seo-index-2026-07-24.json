@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "verifiedAt": "2026-07-24",
+  "associationUrl": "https://www.klia.or.kr/klia/company/member/list.do",
+  "sources": [
+    { "companySlug": "chubb-life", "companyName": "처브라이프생명", "officialUrl": "https://www.chubblife.co.kr" },
+    { "companySlug": "hana-life", "companyName": "하나생명", "officialUrl": "https://www.hanalife.co.kr" },
+    { "companySlug": "fubon-hyundai-life", "companyName": "푸본현대생명", "officialUrl": "https://www.fubonhyundai.com" },
+    { "companySlug": "kb-life", "companyName": "KB라이프생명", "officialUrl": "https://www.kblife.co.kr" },
+    { "companySlug": "bnp-paribas-cardif-life", "companyName": "BNP파리바카디프생명", "officialUrl": "https://www.cardif.co.kr" },
+    { "companySlug": "im-life", "companyName": "iM라이프생명", "officialUrl": "https://www.dgbfnlife.com" },
+    { "companySlug": "abl-life", "companyName": "ABL생명", "officialUrl": "https://www.abllife.co.kr" },
+    { "companySlug": "kdb-life", "companyName": "KDB생명", "officialUrl": "https://www.kdblife.co.kr" },
+    { "companySlug": "kyobo-lifeplanet", "companyName": "교보라이프플래닛", "officialUrl": "https://www.lifeplanet.co.kr" },
+    { "companySlug": "aia-life", "companyName": "AIA생명", "officialUrl": "https://www.aia.co.kr" }
+  ],
+  "questions": [
+    { "slug": "chubb-life-policy-loan-interest-account-change-check", "title": "처브라이프생명 보험계약대출 이자 납입계좌를 변경하면 언제부터 적용되나요?", "searchIntent": "보험계약대출 이자 납입계좌 변경 적용일 확인", "companySlug": "chubb-life", "productName": null },
+    { "slug": "hana-life-maturity-payment-account-preregister-check", "title": "하나생명 만기보험금 지급계좌를 미리 등록하면 별도 청구가 필요 없나요?", "searchIntent": "만기보험금 지급계좌 사전등록과 자동지급 여부 확인", "companySlug": "hana-life", "productName": null },
+    { "slug": "fubon-hyundai-premium-certificate-tax-reflection-check", "title": "푸본현대생명 보험료 납입증명서 금액이 실제 납입액과 다를 때 무엇을 확인하나요?", "searchIntent": "보험료 납입증명서와 실제 납입액 차이 확인", "companySlug": "fubon-hyundai-life", "productName": null },
+    { "slug": "kb-life-claim-representative-authorization-documents-check", "title": "KB라이프생명 보험금을 가족이 대신 청구할 때 위임서류는 무엇을 확인해야 하나요?", "searchIntent": "가족 보험금 대리청구 위임서류 확인", "companySlug": "kb-life", "productName": null },
+    { "slug": "bnp-cardif-variable-report-base-date-check", "title": "BNP파리바카디프생명 변액보험 운용보고서의 기준일과 현재 적립금이 다른 이유는 무엇인가요?", "searchIntent": "변액보험 운용보고서 기준일과 현재 적립금 차이 확인", "companySlug": "bnp-paribas-cardif-life", "productName": null },
+    { "slug": "im-life-policyholder-insured-address-notice-check", "title": "iM라이프생명 계약자와 피보험자 주소가 다르면 안내장은 어디로 발송되나요?", "searchIntent": "계약자 피보험자 주소와 안내장 수신지 확인", "companySlug": "im-life", "productName": null },
+    { "slug": "abl-life-autopay-retry-date-check", "title": "ABL생명 보험료 자동이체가 실패하면 언제 다시 출금되나요?", "searchIntent": "보험료 자동이체 실패 후 재출금일 확인", "companySlug": "abl-life", "productName": null },
+    { "slug": "kdb-life-premium-demand-period-lapse-check", "title": "KDB생명 보험료 납입최고 안내를 받으면 계약은 언제 실효되나요?", "searchIntent": "보험료 납입최고 기간과 실효예정일 확인", "companySlug": "kdb-life", "productName": null },
+    { "slug": "kyobo-lifeplanet-electronic-signature-document-download-check", "title": "교보라이프플래닛 전자서명한 청약서와 동의서를 다시 내려받을 수 있나요?", "searchIntent": "전자서명 청약서 동의서 다운로드와 보관 확인", "companySlug": "kyobo-lifeplanet", "productName": null },
+    { "slug": "aia-life-premium-demand-lapse-date-check", "title": "AIA생명 보험료 납입최고 안내의 실효예정일은 어떻게 확인하나요?", "searchIntent": "보험료 납입최고와 실효예정일 확인", "companySlug": "aia-life", "productName": null }
+  ]
+}
