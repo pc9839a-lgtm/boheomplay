@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "verifiedAt": "2026-07-25",
+  "associationUrl": "https://www.klia.or.kr/klia/company/member/list.do",
+  "sources": [
+    { "companySlug": "ibk-pension", "companyName": "IBK연금보험", "officialUrl": "https://www.ibki.co.kr", "serviceUrl": "https://www.ibki.co.kr/banking/sidesubmenu/SERVICE_INFO_P.jsp" },
+    { "companySlug": "shinhan-life", "companyName": "신한라이프생명", "officialUrl": "https://www.shinhanlife.co.kr", "serviceUrl": "https://shinhanlife.co.kr/hp/cdhf0140.do" },
+    { "companySlug": "samsung-life", "companyName": "삼성생명", "officialUrl": "https://www.samsunglife.com" },
+    { "companySlug": "kyobo-life", "companyName": "교보생명", "officialUrl": "https://www.kyobo.com" },
+    { "companySlug": "miraeasset-life", "companyName": "미래에셋생명", "officialUrl": "https://life.miraeasset.com" },
+    { "companySlug": "metlife-korea", "companyName": "메트라이프생명", "officialUrl": "https://www.metlife.co.kr" },
+    { "companySlug": "tongyang-life", "companyName": "동양생명", "officialUrl": "https://www.myangel.co.kr" },
+    { "companySlug": "hanwha-life", "companyName": "한화생명", "officialUrl": "https://www.hanwhalife.com" },
+    { "companySlug": "lina-life", "companyName": "라이나생명", "officialUrl": "https://www.lina.co.kr" },
+    { "companySlug": "nh-life", "companyName": "NH농협생명", "officialUrl": "https://www.nhlife.co.kr" }
+  ],
+  "questions": [
+    { "slug": "ibk-pension-certificate-processing-status-check", "title": "IBK연금보험 증명서 신청 후 처리현황이 계속 접수 상태일 때 무엇을 확인하나요?", "searchIntent": "증명서 신청처리 현황과 발급 지연 확인", "companySlug": "ibk-pension", "productName": null },
+    { "slug": "shinhan-life-claim-after-hours-received-date-check", "title": "신한라이프생명 보험금을 오후 5시 이후 청구하면 접수일은 언제로 표시되나요?", "searchIntent": "오후 5시 이후 보험금 청구의 실제 접수일 확인", "companySlug": "shinhan-life", "productName": null },
+    { "slug": "samsung-life-beneficiary-change-pending-claim-check", "title": "삼성생명 보험금 청구가 진행 중일 때 수익자를 변경하면 기존 청구에는 누가 적용되나요?", "searchIntent": "진행 중 보험금 청구와 수익자 변경 효력 확인", "companySlug": "samsung-life", "productName": null },
+    { "slug": "kyobo-life-policyholder-change-autopay-check", "title": "교보생명 계약자를 변경하면 기존 보험료 자동이체 계좌는 그대로 유지되나요?", "searchIntent": "계약자 변경 후 자동이체 유지 여부 확인", "companySlug": "kyobo-life", "productName": null },
+    { "slug": "miraeasset-life-variable-fund-order-cancel-check", "title": "미래에셋생명 변액보험 펀드변경을 신청한 뒤 취소 가능한 시점은 언제인가요?", "searchIntent": "변액보험 펀드변경 신청 취소 시점 확인", "companySlug": "miraeasset-life", "productName": null },
+    { "slug": "metlife-claim-receipt-number-lost-check", "title": "메트라이프생명 보험금 청구 접수번호를 잃어버렸을 때 진행상태를 어떻게 확인하나요?", "searchIntent": "보험금 청구 접수번호 분실 후 진행상태 확인", "companySlug": "metlife-korea", "productName": null },
+    { "slug": "tongyang-life-policyholder-change-tax-certificate-check", "title": "동양생명 계약자를 변경한 해의 보험료 납입증명서는 누구 기준으로 발급되나요?", "searchIntent": "계약자 변경 연도 납입증명서 귀속 확인", "companySlug": "tongyang-life", "productName": null },
+    { "slug": "hanwha-life-withdrawal-cancel-deadline-check", "title": "한화생명 중도인출을 신청한 뒤 취소할 수 있는 시점은 언제까지인가요?", "searchIntent": "중도인출 신청 취소 가능 시점 확인", "companySlug": "hanwha-life", "productName": null },
+    { "slug": "lina-life-additional-claim-merge-check", "title": "라이나생명 보험금 심사 중 같은 사고의 추가 청구를 하면 기존 건과 합쳐지나요?", "searchIntent": "보험금 심사 중 추가 청구와 보완서류 구분", "companySlug": "lina-life", "productName": null },
+    { "slug": "nh-life-policy-reissue-date-difference-check", "title": "NH농협생명 재발행 보험증권의 발행일과 최초 계약일이 다른 이유는 무엇인가요?", "searchIntent": "재발행 보험증권 발행일과 최초 계약일 차이 확인", "companySlug": "nh-life", "productName": null }
+  ]
+}
