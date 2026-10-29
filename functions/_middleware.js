@@ -3,7 +3,7 @@ const OG=`${SITE}/og-image`;
 const CORE_SCRIPTS='<script src="/assets/js/compliance.js?v=20260712-v4"></script><script src="/assets/js/consent-all.js?v=20260715-v2"></script><script src="/assets/js/agent-info.js?v=20260712-v1"></script>';
 const BOARD_UI='<script src="/assets/js/board-ui-restore.js?v=20260715-board-restore-v12"></script>';
 const NOTICE='<section class="site-compliance-notice"><div class="site-compliance-inner"><strong>보험정보 이용안내</strong>보험플레이의 게시글과 답변은 일반적인 보험정보 제공을 위한 것이며 특정 보험상품의 가입 권유, 보험계약 체결 또는 중개를 위한 설명이 아닙니다.<div class="site-compliance-registration">보험모집종사자: 김도윤 · 소속: 지에이코리아주식회사 · 보험협회 고유번호: 20260217401069 · 조회 기준일: 2026.07.12</div><div class="site-compliance-links"><a href="/company/">생명보험회사 목록</a><a href="/product/">보험상품명 정보</a><a href="https://www.e-cleanins.or.kr/" target="_blank" rel="noopener noreferrer">이클린보험서비스에서 정보 확인</a><a href="/insurance-notice/">보험정보 이용안내</a><a href="/privacy/">개인정보처리방침</a><a href="/terms/">이용약관</a></div></div></section>';
-const CSP=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","frame-src 'none'","form-action 'self'","img-src 'self' data: https:","font-src 'self' data: https://cdn.jsdelivr.net","style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net","script-src 'self' 'unsafe-inline'","connect-src 'self' https://script.google.com https://script.googleusercontent.com","manifest-src 'self'","worker-src 'none'",'upgrade-insecure-requests'].join('; ');
+const CSP=["default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","frame-src 'none'","form-action 'self'","img-src 'self' data: https:","font-src 'self' data: https://cdn.jsdelivr.net","style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net","script-src 'self' 'unsafe-inline' https://www.googletagmanager.com","connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://script.google.com https://script.googleusercontent.com","manifest-src 'self'","worker-src 'none'",'upgrade-insecure-requests'].join('; ');
 
 function patchHtml(html){
   let out=html
@@ -53,6 +53,7 @@ export async function onRequest(context){
     headers.set('content-type','text/html; charset=utf-8');
     const text=await response.text();
     body=url.pathname.startsWith('/admin')?text:patchHtml(text);
+    if (url.hostname === 'boheomplay.pagero.kr' && !body.includes('data-pagero-portfolio-ga4') && body.includes('</head>') && !/^\/(?:admin|api|dashboard)(?:\/|$)/i.test(url.pathname)) body = body.replace('</head>', "<script data-pagero-portfolio-ga4>(function(){if(location.hostname!=='boheomplay.pagero.kr')return;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config','G-501Z526B8H');var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-501Z526B8H';document.head.appendChild(s)})();</script>" + '</head>');
   }else if(contentType.includes('application/json')){
     headers.set('content-type','application/json; charset=utf-8');
     body=await response.text();
