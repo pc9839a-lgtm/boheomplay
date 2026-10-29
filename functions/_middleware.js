@@ -53,7 +53,7 @@ export async function onRequest(context){
     headers.set('content-type','text/html; charset=utf-8');
     const text=await response.text();
     body=url.pathname.startsWith('/admin')?text:patchHtml(text);
-    if (url.hostname === 'boheomplay.pagero.kr' && !body.includes('data-pagero-portfolio-ga4') && body.includes('</head>') && !/^\\/(?:admin|api|dashboard)(?:\\/|$)/i.test(url.pathname)) body = body.replace('</head>', "<script data-pagero-portfolio-ga4>(function(){if(location.hostname!=='boheomplay.pagero.kr')return;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config','G-501Z526B8H');var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-501Z526B8H';document.head.appendChild(s)})();</script>" + '</head>');
+    if (url.hostname === 'boheomplay.pagero.kr' && !body.includes('data-pagero-portfolio-ga4') && body.includes('</head>') && !/^\/(?:admin|api|dashboard)(?:\/|$)/i.test(url.pathname)) body = body.replace('</head>', "<script data-pagero-portfolio-ga4>(function(){if(location.hostname!=='boheomplay.pagero.kr')return;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config','G-501Z526B8H');var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id=G-501Z526B8H';document.head.appendChild(s)})();</script>" + '</head>');
   }else if(contentType.includes('application/json')){
     headers.set('content-type','application/json; charset=utf-8');
     body=await response.text();
